@@ -1,0 +1,39 @@
+html, body {
+    background-color: #1F1F1F;
+    color: #fff;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table, td, th {
+    border: 1px solid #aaa;
+}
+
+th {
+    vertical-align: bottom;
+}
+
+td, th {
+    padding: 4px 8px 4px 4px;
+    text-align: left;
+}
+
+td {
+    font-family: monospace;
+    white-space: pre;
+}
+
+th.thin, td.thin {
+    max-width: 100px;
+}
+
+th.thin2, td.thin2 {
+    max-width: 70px;
+}
+
+a {
+    color: #fff;
+    text-decoration: underline;
+}

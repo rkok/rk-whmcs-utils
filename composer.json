@@ -1,0 +1,13 @@
+{
+    "name": "x/whmcs-utils",
+    "autoload": {
+        "psr-4": {
+            "RKWhmcsUtils\\": "src/"
+        }
+    },
+    "require": {
+        "mtownsend/xml-to-array": "^2.0",
+        "ext-pdo": "*",
+        "ext-curl": "*"
+    }
+}
