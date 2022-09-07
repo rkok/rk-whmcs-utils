@@ -2,14 +2,13 @@
 
 namespace RKWhmcsUtils;
 
-use RKWhmcsUtils;
-
 require_once(__DIR__ . '/vendor/autoload.php');
 
 $whmcsDomains = (WhmcsDb::buildInstance())->getActiveDomainNames();
 
 $enom = Enom::buildInstance();
 $enomDomains = [];
+$enomTldCounts = [];
 
 try {
     $enomDomainsRaw = $enom->call('GetDomains', ['Display' => 100]);
@@ -31,26 +30,49 @@ try {
             'expirationDate' => $domain['expiration-date'],
             'autoRenew' => $domain['auto-renew']
         ];
+
+        $enomTldCounts[$domain['tld']] = (@$enomTldCounts[$domain['tld']] ?: 0) + 1;
     }
 } catch (\Exception $e) {
     die("Error during eNom API call. Try refreshing the page. Raw error: {$e->getMessage()}");
 }
 
-$allDomains = array_merge(array_keys($enomDomains), $whmcsDomains);
+ksort($enomTldCounts);
+
+$allDomains = array_unique(array_merge(array_keys($enomDomains), $whmcsDomains));
 sort($allDomains);
 
 ?>
 <!DOCTYPE html>
 <head>
-  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/base.css"/>
   <style>
-    .bad {
-        font-weight: bold;
-        color: red;
-    }
+      .bad {
+          font-weight: bold;
+          color: red;
+      }
+
+      #tld-counts {
+          margin-bottom: 20px;
+      }
   </style>
 </head>
 <body>
+<h1>eNom Check</h1>
+<div id="tld-counts">
+  <h2>TLDs registered in eNom</h2>
+  <table>
+    <tbody>
+        <?php foreach ($enomTldCounts as $tld => $count): ?>
+          <tr>
+            <td><?= $tld ?></td>
+            <td><?= $count ?></td>
+          </tr>
+        <?php endforeach; ?>
+    </tbody>
+  </table>
+</div>
+<h2>Overview</h2>
 <table>
   <thead>
     <th>Domain</th>
