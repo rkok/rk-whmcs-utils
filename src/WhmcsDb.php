@@ -74,4 +74,37 @@ class WhmcsDb
             where h.domainstatus = 'Active'
         ")->fetchAll(PDO::FETCH_GROUP);
     }
+
+    /**
+     * @return array|false
+     */
+    public function getInvoices()
+    {
+        return $this->pdo->query("
+            select *
+            from tblinvoices
+        ")->fetchAll(PDO::FETCH_UNIQUE);
+    }
+
+    /**
+     * @return array|false
+     */
+    public function getInvoiceItemsByInvoiceId()
+    {
+        return $this->pdo->query("
+            select invoiceid, i.*
+            from tblinvoiceitems i
+        ")->fetchAll(PDO::FETCH_GROUP);
+    }
+
+    /**
+     * @return array|false
+     */
+    public function getUsers()
+    {
+        return $this->pdo->query("
+            select *
+            from tblusers
+        ")->fetchAll(PDO::FETCH_UNIQUE);
+    }
 }

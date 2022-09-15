@@ -30,6 +30,7 @@ class Config
             throw new \Exception('config.php not found');
         }
         $config = require($configPath);
+        $this->dbHost = $config['dbHost'];
         $this->dbName = $config['dbName'];
         $this->dbUsername = $config['dbUsername'];
         $this->dbPassword = $config['dbPassword'];

@@ -25,6 +25,14 @@ td {
     white-space: pre;
 }
 
+td.no-whitespace {
+    white-space: normal;
+}
+
+td.right-align {
+    text-align: right;
+}
+
 th.thin, td.thin {
     max-width: 100px;
 }
