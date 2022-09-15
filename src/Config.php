@@ -8,6 +8,10 @@ class Config
      * @var Config
      */
     private static $instance;
+    public $dbHost;
+    public $dbName;
+    public $dbUsername;
+    public $dbPassword;
     public $enomUser;
     public $enomKey;
 

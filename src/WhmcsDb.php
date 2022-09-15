@@ -14,12 +14,13 @@ class WhmcsDb
     public static function buildInstance()
     {
         $config = Config::getInstance();
-        return new self($config->dbName, $config->dbUsername, $config->dbPassword);
+        return new self($config->dbName, $config->dbUsername, $config->dbPassword, $config->dbHost);
     }
 
-    public function __construct($dbName, $username, $password)
+    public function __construct($dbName, $username, $password, $dbHost = '127.0.0.1:3306')
     {
-        $this->pdo = new PDO("mysql:dbname=$dbName", $username, $password, [
+        list($host, $port) = explode(':', $dbHost);
+        $this->pdo = new PDO("mysql:dbname=$dbName;host=$host;port=" . $port ?: '3306', $username, $password, [
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);

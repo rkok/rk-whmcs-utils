@@ -7,6 +7,7 @@ if (file_exists(__DIR__ . '/../../configuration.php')) {
 }
 
 return [
+    'dbHost' => $db_host,
     'dbName' => $db_name,
     'dbUsername' => $db_username,
     'dbPassword' => $db_password,
