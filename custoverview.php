@@ -86,10 +86,9 @@ foreach ($clients as $cKey => $client) {
     $clients[$cKey]['billables'] = $billables;
 }
 
+include(__DIR__ . '/inc/00-head.php');
+
 ?>
-<!DOCTYPE html>
-<head>
-  <link rel="stylesheet" href="css/base.css" />
   <style>
       th.notes, td.notes {
           max-width: 200px;

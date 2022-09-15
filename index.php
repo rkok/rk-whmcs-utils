@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="css/base.css" />
+<?php include(__DIR__ . '/inc/00-head.php') ?>
 </head>
 <body>
 <h1>WHMCS Utils</h1>

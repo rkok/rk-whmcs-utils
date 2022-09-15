@@ -42,10 +42,8 @@ ksort($enomTldCounts);
 $allDomains = array_unique(array_merge(array_keys($enomDomains), $whmcsDomains));
 sort($allDomains);
 
+include(__DIR__ . '/inc/00-head.php');
 ?>
-<!DOCTYPE html>
-<head>
-  <link rel="stylesheet" href="css/base.css"/>
   <style>
       .bad {
           font-weight: bold;
