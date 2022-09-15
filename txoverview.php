@@ -13,6 +13,19 @@ $invoiceItems = $db->getInvoiceItemsByInvoiceId();
 
 $users = $db->getUsers();
 
+$affiliates = $db->getAffiliates();
+
+$affiliateAccounts = $db->getAffiliateAccounts();
+
+$findAffiliateForUserId = function ($userId) use ($affiliates, $affiliateAccounts) {
+    foreach ($affiliateAccounts as $account) {
+        if ($account['userid'] === $userId && isset($affiliates[$account['affiliateid']])) {
+            return $affiliates[$account['affiliateid']];
+        }
+    }
+    return null;
+};
+
 include(__DIR__ . '/inc/00-head.php');
 
 ?>
@@ -38,9 +51,13 @@ include(__DIR__ . '/inc/00-head.php');
     <th>- Credit</th>
     <th>Total</th>
     <th>PDF</th>
+    <th>Affiliate</th>
+    <th>Commission</th>
   </thead>
   <tbody>
-      <?php foreach ($invoices as $invoiceId => $invoice):
+      <?php foreach ($invoices
+
+                     as $invoiceId => $invoice):
           $isPaid = $invoice['status'] === 'Paid';
           $tax = (float)$invoice['tax'];
           $taxRate = (float)$invoice['taxrate'];
@@ -50,12 +67,26 @@ include(__DIR__ . '/inc/00-head.php');
           $credit = (float)$invoice['credit'];
           $creditDisplay = $credit > 0
               ? "-" . str_pad(number_format($credit, 2), 6, ' ', STR_PAD_LEFT)
-              : ''
+              : '';
+          $affiliate = $findAffiliateForUserId($invoice['userid']);
+          $affiliateDisplay = $affiliate ? $affiliate['companyname'] : '';
+          $commissionDisplay = '';
+          if ($affiliate && $isPaid) {
+              if ($affiliate['paytype'] === 'percentage') {
+                  $perc = (float)$affiliate['payamount'];
+                  $commissionAmount = (float)$invoice['total'] * ($perc / 100);
+                  $commissionDisplay = str_pad("(" . $affiliate['payamount'] . "%)", 6, ' ', STR_PAD_LEFT) . " ";
+                  $commissionDisplay .= str_pad(number_format($commissionAmount, 2), 6, ' ', STR_PAD_LEFT);
+              } else {
+                  $commissionDisplay = 'UNSUPPORTED PAYTYPE';
+              }
+          }
+
           ?>
         <tr>
-          <td><a target="_blank" href="../invoices.php?action=edit&id=<?=$invoiceId?>"><?= $invoiceId ?></td></td>
+          <td><a target="_blank" href="../invoices.php?action=edit&id=<?= $invoiceId ?>"><?= $invoiceId ?></td>
           <td><?= $invoice['date'] ?></td>
-          <td class="no-whitespace invoice-status <?= $isPaid ? 'paid' : '' ?>">
+          <td class="invoice-status <?= $isPaid ? 'paid' : '' ?>">
               <?= $invoice['status'] ?>
               <?php if ($isPaid):
                   $dtPaid = new \DateTime($invoice['datepaid']);
@@ -70,6 +101,8 @@ include(__DIR__ . '/inc/00-head.php');
           <td class="right-align"><?= $creditDisplay ?></td>
           <td class="right-align"><?= $invoice['total'] ?></td>
           <td><a target="_blank" href="/dl.php?type=i&id=<?= $invoiceId ?>&language=english">PDF</a></td>
+          <td class="thin"><?= $affiliateDisplay ?></td>
+          <td class="right-align"><?= $commissionDisplay ?></td>
         </tr>
       <?php endforeach; ?>
   </tbody>
