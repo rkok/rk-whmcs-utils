@@ -4,6 +4,8 @@ namespace RKWhmcsUtils;
 
 require_once(__DIR__ . '/vendor/autoload.php');
 
+$config = Config::getInstance();
+
 $db = WhmcsDb::buildInstance();
 
 $invoices = $db->getInvoices();
@@ -55,9 +57,7 @@ include(__DIR__ . '/inc/00-head.php');
     <th>Commission</th>
   </thead>
   <tbody>
-      <?php foreach ($invoices
-
-                     as $invoiceId => $invoice):
+      <?php foreach ($invoices as $invoiceId => $invoice):
           $isPaid = $invoice['status'] === 'Paid';
           $tax = (float)$invoice['tax'];
           $taxRate = (float)$invoice['taxrate'];
@@ -84,7 +84,9 @@ include(__DIR__ . '/inc/00-head.php');
 
           ?>
         <tr>
-          <td><a target="_blank" href="../invoices.php?action=edit&id=<?= $invoiceId ?>"><?= $invoiceId ?></td>
+          <td><a target="_blank"
+                 href="<?= $config->whmcsAdminRoot ?>invoices.php?action=edit&id=<?= $invoiceId ?>"><?= $invoiceId ?>
+          </td>
           <td><?= $invoice['date'] ?></td>
           <td class="invoice-status <?= $isPaid ? 'paid' : '' ?>">
               <?= $invoice['status'] ?>
@@ -100,7 +102,8 @@ include(__DIR__ . '/inc/00-head.php');
           <td><?= $taxDisplay ?></td>
           <td class="right-align"><?= $creditDisplay ?></td>
           <td class="right-align"><?= $invoice['total'] ?></td>
-          <td><a target="_blank" href="/dl.php?type=i&id=<?= $invoiceId ?>&language=english">PDF</a></td>
+          <td><a target="_blank"
+                 href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoiceId ?>&language=english">PDF</a></td>
           <td class="thin"><?= $affiliateDisplay ?></td>
           <td class="right-align"><?= $commissionDisplay ?></td>
         </tr>

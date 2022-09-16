@@ -12,5 +12,7 @@ return [
     'dbUsername' => $db_username,
     'dbPassword' => $db_password,
     'enomUser' => 'myenomuser', // TODO: extract from WHMCS DB?
-    'enomKey' => 'BEEF'
+    'enomKey' => 'BEEF',
+    'whmcsAdminRoot' => 'https://mywebsite.com/admin/', // Optional
+    'whmcsRoot' => 'https://mywebsite.com/', // Optional
 ];

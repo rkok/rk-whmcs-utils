@@ -14,6 +14,8 @@ class Config
     public $dbPassword;
     public $enomUser;
     public $enomKey;
+    public $whmcsAdminRoot;
+    public $whmcsRoot;
 
     public static function getInstance()
     {
@@ -36,5 +38,7 @@ class Config
         $this->dbPassword = $config['dbPassword'];
         $this->enomUser = $config['enomUser'];
         $this->enomKey = $config['enomKey'];
+        $this->whmcsAdminRoot = $config['whmcsAdminRoot'] ?: '/admin/';
+        $this->whmcsRoot = $config['whmcsRoot'] ?: '/';
     }
 }
