@@ -21,23 +21,7 @@ $clientsByUserId = $db->getClientsByUserId();
 
 $affiliates = $db->getAffiliates();
 
-$affiliateAccounts = $db->getAffiliateAccounts();
-
-$findAffiliateForInvoicedUserId = function ($userId) use ($affiliates, $affiliateAccounts) {
-    // See if the user ID matches one of our affiliates' _linked_ accounts
-    foreach ($affiliateAccounts as $account) {
-        if ($account['userid'] === $userId && isset($affiliates[$account['affiliateid']])) {
-            return $affiliates[$account['affiliateid']];
-        }
-    }
-    // Alternatively, see if the user ID matches our affiliates themselves
-    foreach ($affiliates as $affiliate) {
-        if ($affiliate['userid'] === $userId) {
-            return $affiliate;
-        }
-    }
-    return null;
-};
+$clientAffiliateIds = $db->getClientAffiliateIds();
 
 include(__DIR__ . '/inc/00-head.php');
 
@@ -81,19 +65,6 @@ include(__DIR__ . '/inc/00-head.php');
         $creditDisplay = $credit > 0
             ? "-" . str_pad(number_format($credit, 2), 6, ' ', STR_PAD_LEFT)
             : '';
-        $affiliate = $findAffiliateForInvoicedUserId($invoice['userid']);
-        $affiliateDisplay = $affiliate ? $affiliate['companyname'] : '';
-        $commissionDisplay = '';
-        if ($affiliate && $isPaid) {
-            if ($affiliate['paytype'] === 'percentage') {
-                $perc = (float)$affiliate['payamount'];
-                $commissionAmount = (float)$invoice['total'] * ($perc / 100);
-                $commissionDisplay = str_pad("(" . $affiliate['payamount'] . "%)", 6, ' ', STR_PAD_LEFT) . " ";
-                $commissionDisplay .= str_pad(number_format($commissionAmount, 2), 6, ' ', STR_PAD_LEFT);
-            } else {
-                $commissionDisplay = 'UNSUPPORTED PAYTYPE';
-            }
-        }
 
         $clientId = null;
 
@@ -108,6 +79,24 @@ include(__DIR__ . '/inc/00-head.php');
             $clientDisplay .= " ({$clientId})";
         } else {
             $clientDisplay = 'Error matching client';
+        }
+
+        $affiliate = null;
+        if (isset($clientAffiliateIds[$clientId])) {
+            $affiliate = $affiliates[$clientAffiliateIds[$clientId]];
+        }
+
+        $affiliateDisplay = $affiliate ? $affiliate['companyname'] : '';
+        $commissionDisplay = '';
+        if ($affiliate && $isPaid) {
+            if ($affiliate['paytype'] === 'percentage') {
+                $perc = (float)$affiliate['payamount'];
+                $commissionAmount = (float)$invoice['total'] * ($perc / 100);
+                $commissionDisplay = str_pad("(" . $affiliate['payamount'] . "%)", 6, ' ', STR_PAD_LEFT) . " ";
+                $commissionDisplay .= str_pad(number_format($commissionAmount, 2), 6, ' ', STR_PAD_LEFT);
+            } else {
+                $commissionDisplay = 'UNSUPPORTED PAYTYPE';
+            }
         }
 
         ?>

@@ -37,16 +37,17 @@ class WhmcsDb
         ")->fetchAll(PDO::FETCH_UNIQUE);
     }
 
-    public function getAffiliateAccounts()
-    {
+    public function getClientAffiliateIds() {
         return $this->pdo->query("
-            select aa.affiliateid, aa.relid clientid, u.id userid 
-            from tblaffiliatesaccounts aa
-            join tblclients c on aa.relid = c.id
-            left join tblusers_clients uc on c.id = uc.client_id 
-            left join tblusers u on uc.auth_user_id = u.id
-            group by aa.relid;
-        ")->fetchAll();
+            select uc_child.client_id, a.id
+            from tblaffiliates a
+            join tblclients c on a.clientid = c.id
+            join tblusers_clients uc on c.id = uc.client_id
+            join tblusers u on uc.auth_user_id = u.id
+            join tblusers_clients uc_child on uc_child.auth_user_id  = u.id
+            where a.payamount != 0
+            group by u.id, uc_child.client_id;
+        ")->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
     public function getActiveUsersList()
