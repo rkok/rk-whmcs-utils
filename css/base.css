@@ -36,6 +36,10 @@ th.thin2, td.thin2 {
     max-width: 70px;
 }
 
+td.trimoverflow {
+    word-wrap: break-word;
+}
+
 a {
     color: #fff;
     text-decoration: underline;

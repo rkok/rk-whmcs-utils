@@ -101,10 +101,24 @@ class WhmcsDb
     /**
      * @return array|false
      */
-    public function getInvoices()
+    public function getClients()
     {
         return $this->pdo->query("
             select *
+            from tblclients
+        ")->fetchAll(PDO::FETCH_UNIQUE);
+    }
+
+    /**
+     * @return array|false
+     */
+    public function getInvoices()
+    {
+        // NOTE: deliberately aliasing 'userid' to 'clientid' -
+        // there is a hideous misnomer hidden in WHMCS where tblinvoices.userid actually
+        // refers to an entry in tblCLIENT, not tblUSERS!
+        return $this->pdo->query("
+            select *, userid as clientid
             from tblinvoices
         ")->fetchAll(PDO::FETCH_UNIQUE);
     }
@@ -129,5 +143,20 @@ class WhmcsDb
             select *
             from tblusers
         ")->fetchAll(PDO::FETCH_UNIQUE);
+    }
+
+    /**
+     * @return array|false
+     */
+    public function getClientsByUserId() {
+        return $this->pdo->query("
+            select u.id userid, uc.owner is_owner, uc.permissions, c.*
+            from tblusers u
+            left join tblusers_clients uc on u.id = uc.auth_user_id
+            left join tblclients c on uc.client_id = c.id
+            group by u.id, c.id
+            having count(c.id) > 0
+            order by u.id asc
+        ")->fetchAll(PDO::FETCH_GROUP);
     }
 }

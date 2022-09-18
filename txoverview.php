@@ -15,6 +15,10 @@ $invoiceItems = $db->getInvoiceItemsByInvoiceId();
 
 $users = $db->getUsers();
 
+$clients = $db->getClients();
+
+$clientsByUserId = $db->getClientsByUserId();
+
 $affiliates = $db->getAffiliates();
 
 $affiliateAccounts = $db->getAffiliateAccounts();
@@ -53,6 +57,7 @@ include(__DIR__ . '/inc/00-head.php');
     <thead>
     <th>Invoice ID</th>
     <th>Created At</th>
+    <th>Client</th>
     <th>Status</th>
     <th>Payment method</th>
     <th>Subtotal</th>
@@ -90,12 +95,30 @@ include(__DIR__ . '/inc/00-head.php');
             }
         }
 
+        $clientId = null;
+
+        if (isset($clients[$invoice['clientid']])) {
+            $clientId = $invoice['clientid'];
+            $client = $clients[$clientId];
+            $clientDisplay = trim($client['companyname']);
+            if (!$clientDisplay) {
+                // Fallback on client first/last name
+                $clientDisplay = trim($client['firstname'] . " " . $client['lastname']);
+            }
+            $clientDisplay .= " ({$clientId})";
+        } else {
+            $clientDisplay = 'Error matching client';
+        }
+
         ?>
         <tr>
             <td><a target="_blank"
                    href="<?= $config->whmcsAdminRoot ?>invoices.php?action=edit&id=<?= $invoiceId ?>"><?= $invoiceId ?>
             </td>
             <td><?= $invoice['date'] ?></td>
+            <td class="thin trimoverflow"><a target="_blank"
+                                             href="<?= $config->whmcsAdminRoot ?>clientssummary.php?userid=<?= $clientId ?>"><?= $clientDisplay ?></a>
+            </td>
             <td class="invoice-status <?= $isPaid ? 'paid' : '' ?>">
                 <?= $invoice['status'] ?>
                 <?php if ($isPaid):
