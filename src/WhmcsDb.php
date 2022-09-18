@@ -50,19 +50,25 @@ class WhmcsDb
         ")->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
-    public function getActiveUsersList()
+    public function getClientsAndAssocAffiliates()
     {
         return $this->pdo->query("
-            select u.id user_id, u.email, c.id client_id, c.firstname, c.lastname, 
-                   c2.companyname aff_company, a.payamount aff_payamount, a.paytype aff_paytype
+            select c.id client_id, c.firstname, c.lastname, c.email,
+                   c2.companyname aff_company, aff.payamount aff_payamount, aff.paytype aff_paytype
             from tblclients c
-            join (select * from tblusers_clients uc group by uc.auth_user_id) uc on uc.client_id  = c.id
-            join tblusers u on uc.auth_user_id = u.id
-            left join tblaffiliatesaccounts aa on aa.relid = u.id
-            left join tblaffiliates a on aa.affiliateid = a.id
-            left join tblclients c2 on a.clientid = c2.id  
-            where c.status = 'Active'
-            order by user_id asc
+            join tblusers_clients uc on c.id = uc.client_id 
+            left join tblusers u on uc.auth_user_id  = u.id and u.id in (
+                select u.id 
+                from tblaffiliates a
+                join tblclients c on a.clientid = c.id
+                join tblusers_clients uc on uc.client_id = c.id 
+                join tblusers u on uc.auth_user_id = u.id
+            )
+            left join tblusers_clients uc2 on u.id = uc2.auth_user_id 
+            left join tblclients c2 on uc2.client_id = c2.id
+            left join tblaffiliates aff on uc2.client_id = aff.clientid
+            group by c.id
+            order by c.id;
         ")->fetchAll();
     }
 
@@ -79,7 +85,7 @@ class WhmcsDb
         ")->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    public function getActiveDomainsListByUserId()
+    public function getActiveDomainsListByClientId()
     {
         return $this->pdo->query("
             select d.userid, d.domain, d.recurringamount, d.registrationperiod, d.paymentmethod, d.additionalnotes notes
@@ -89,7 +95,7 @@ class WhmcsDb
         ")->fetchAll(PDO::FETCH_GROUP);
     }
 
-    public function getActiveServicesListByUserId()
+    public function getActiveServicesListByClientId()
     {
         return $this->pdo->query("
             select h.userid user_id, h.domain, h.paymentmethod, h.amount, h.billingcycle, h.notes

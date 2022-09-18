@@ -8,11 +8,11 @@ const VAT_PERC = 20;
 
 $whmcsDb = WhmcsDb::buildInstance();
 
-$clients = $whmcsDb->getActiveUsersList();
+$clients = $whmcsDb->getClientsAndAssocAffiliates();
 
-$domains = $whmcsDb->getActiveDomainsListByUserId();
+$domains = $whmcsDb->getActiveDomainsListByClientId();
 
-$services = $whmcsDb->getActiveServicesListByUserId();
+$services = $whmcsDb->getActiveServicesListByClientId();
 
 $billingCyclesToMonths = [
     'Monthly' => 1,
@@ -89,94 +89,92 @@ foreach ($clients as $cKey => $client) {
 include(__DIR__ . '/inc/00-head.php');
 
 ?>
-  <style>
-      th.notes, td.notes {
-          max-width: 200px;
-          word-wrap: break-word;
-          white-space: normal;
-          overflow-wrap: break-word;
-      }
+<style>
+    th.notes, td.notes {
+        max-width: 200px;
+        word-wrap: break-word;
+        white-space: normal;
+        overflow-wrap: break-word;
+    }
 
-      tr.grandtotal td {
-          font-weight: bold;
-      }
-  </style>
+    tr.grandtotal td {
+        font-weight: bold;
+    }
+</style>
 </head>
 <body>
 <table>
-  <thead>
+    <thead>
     <tr>
-      <th>UID</th>
-      <th>Email</th>
-      <th>CID</th>
-      <th>Name</th>
-      <th>Affiliate</th>
-      <th colspan="7">Billables</th>
+        <th>CID</th>
+        <th>Email</th>
+        <th>Name</th>
+        <th>Affiliate</th>
+        <th colspan="7">Billables</th>
     </tr>
     <tr>
-      <th colspan="5"></th>
-      <th>Domain</th>
-      <th>Type</th>
-      <th class="thin2">Amt./mo (gross)</th>
-      <th class="thin2">Aff. fee / mo</th>
-      <th class="thin2">VAT / mo</th>
-      <th class="thin">Payment method</th>
-      <th class="notes">Notes</th>
+        <th colspan="5"></th>
+        <th>Domain</th>
+        <th>Type</th>
+        <th class="thin2">Amt./mo (gross)</th>
+        <th class="thin2">Aff. fee / mo</th>
+        <th class="thin2">VAT / mo</th>
+        <th class="thin">Payment method</th>
+        <th class="notes">Notes</th>
     </tr>
-  </thead>
-  <tbody>
-      <?php
-      $grandTotal = 0;
-      $grandTotalAff = 0;
-      $grandTotalVat = 0;
+    </thead>
+    <tbody>
+    <?php
+    $grandTotal = 0;
+    $grandTotalAff = 0;
+    $grandTotalVat = 0;
 
-      foreach ($clients as $client): ?>
+    foreach ($clients as $client): ?>
         <tr>
-          <td><?= $client['user_id'] ?></td>
-          <td><?= $client['email'] ?></td>
-          <td><?= $client['client_id'] ?></td>
-          <td><?= $client['firstname'] ?> <?= $client['lastname'] ?></td>
-          <td class="affiliate"><?= $client['aff_company'] ?: '' ?></td>
+            <td><?= $client['client_id'] ?></td>
+            <td><?= $client['email'] ?></td>
+            <td><?= $client['firstname'] ?> <?= $client['lastname'] ?></td>
+            <td class="affiliate"><?= $client['aff_company'] ?: '' ?></td>
         </tr>
-          <?php foreach ($client['billables'] as $billable): ?>
-          <tr>
-            <td colspan="5"></td>
-            <td><?= $billable['domain'] ?></td>
-            <td><?= $billable['type'] ?></td>
-            <td><?= str_pad(number_format($billable['monthly_amount'], 2), 8, ' ', STR_PAD_LEFT) ?></td>
-            <td><?=
-                $billable['monthly_aff_fee']
-                    ? str_pad(number_format($billable['monthly_aff_fee'], 2), 8, ' ', STR_PAD_LEFT)
-                    : ''
-                ?></td>
-            <td><?= str_pad(number_format($billable['monthly_vat_fee'], 2), 8, ' ', STR_PAD_LEFT) ?></td>
-            <td><?= $billable['payment_method'] ?></td>
-            <td class="notes"><?= $billable['notes'] ?></td>
-          </tr>
-              <?php
+        <?php foreach ($client['billables'] as $billable): ?>
+            <tr>
+                <td colspan="5"></td>
+                <td><?= $billable['domain'] ?></td>
+                <td><?= $billable['type'] ?></td>
+                <td><?= str_pad(number_format($billable['monthly_amount'], 2), 8, ' ', STR_PAD_LEFT) ?></td>
+                <td><?=
+                    $billable['monthly_aff_fee']
+                        ? str_pad(number_format($billable['monthly_aff_fee'], 2), 8, ' ', STR_PAD_LEFT)
+                        : ''
+                    ?></td>
+                <td><?= str_pad(number_format($billable['monthly_vat_fee'], 2), 8, ' ', STR_PAD_LEFT) ?></td>
+                <td><?= $billable['payment_method'] ?></td>
+                <td class="notes"><?= $billable['notes'] ?></td>
+            </tr>
+            <?php
 
-              $grandTotal += $billable['monthly_amount'];
-              $grandTotalAff += $billable['monthly_aff_fee'];
-              $grandTotalVat += $billable['monthly_vat_fee'];
-          endforeach;
+            $grandTotal += $billable['monthly_amount'];
+            $grandTotalAff += $billable['monthly_aff_fee'];
+            $grandTotalVat += $billable['monthly_vat_fee'];
+        endforeach;
 
-          ?>
-      <?php endforeach; ?>
+        ?>
+    <?php endforeach; ?>
     <tr>
-      <td colspan="13">&nbsp;</td>
+        <td colspan="13">&nbsp;</td>
     </tr>
     <tr>
-      <td colspan="8"></td>
-      <td>- Aff</td>
-      <td>- Aff + VAT</td>
+        <td colspan="8"></td>
+        <td>- Aff</td>
+        <td>- Aff + VAT</td>
     </tr>
     <tr class="grandtotal">
-      <td colspan="6"></td>
-      <td>Grand Total:</td>
-      <td><?= str_pad(number_format($grandTotal, 2), 8, ' ', STR_PAD_LEFT) ?></td>
-      <td><?= str_pad(number_format($grandTotal - $grandTotalAff, 2), 8, ' ', STR_PAD_LEFT) ?></td>
-      <td><?= str_pad(number_format($grandTotal - $grandTotalAff - $grandTotalVat, 2), 8, ' ', STR_PAD_LEFT) ?></td>
+        <td colspan="6"></td>
+        <td>Grand Total:</td>
+        <td><?= str_pad(number_format($grandTotal, 2), 8, ' ', STR_PAD_LEFT) ?></td>
+        <td><?= str_pad(number_format($grandTotal - $grandTotalAff, 2), 8, ' ', STR_PAD_LEFT) ?></td>
+        <td><?= str_pad(number_format($grandTotal - $grandTotalAff - $grandTotalVat, 2), 8, ' ', STR_PAD_LEFT) ?></td>
     </tr>
-  </tbody>
+    </tbody>
 </table>
 </body>
