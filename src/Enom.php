@@ -8,11 +8,15 @@ use RKWhmcsUtils\Config;
 class Enom
 {
     private $baseUrl = '';
+    /**
+     * @var string|null
+     */
+    private $proxy;
 
     public static function buildInstance()
     {
         $config = Config::getInstance();
-        return new self($config->enomUser, $config->enomKey);
+        return new self($config->enomUser, $config->enomKey, false, $config->proxy);
     }
 
     /**
@@ -20,10 +24,11 @@ class Enom
      * @param string $password
      * @param boolean $testMode
      */
-    public function __construct($username, $password, $testMode = false)
+    public function __construct($username, $password, $testMode = false, $proxy = null)
     {
         $mode = $testMode ? 'test' : 'live';
         $this->baseUrl .= "https://reseller.enom.com/interface.asp?uid=$username&pw=$password&mode=$mode&response=xml&responsetype=xml";
+        $this->proxy = $proxy;
     }
 
     /**
@@ -43,6 +48,11 @@ class Enom
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+
+        if ($this->proxy) {
+            curl_setopt($ch, CURLOPT_PROXY, $this->proxy);
+        }
+
         $res = curl_exec($ch);
 
         if (($code = curl_getinfo($ch, CURLINFO_HTTP_CODE)) !== 200) {

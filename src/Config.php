@@ -14,6 +14,7 @@ class Config
     public $dbPassword;
     public $enomUser;
     public $enomKey;
+    public $proxy;
     public $whmcsAdminRoot;
     public $whmcsRoot;
 
@@ -38,6 +39,7 @@ class Config
         $this->dbPassword = $config['dbPassword'];
         $this->enomUser = $config['enomUser'];
         $this->enomKey = $config['enomKey'];
+        $this->proxy = $config['proxy'];
         $this->whmcsAdminRoot = $config['whmcsAdminRoot'] ?: '/admin/';
         $this->whmcsRoot = $config['whmcsRoot'] ?: '/';
     }
