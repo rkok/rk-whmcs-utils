@@ -63,6 +63,10 @@ class Enom
 
         $arrRes = XmlToArray::convert($res);
 
+        if (isset($arrRes['errors']) && !empty($arrRes['errors'])) {
+            throw new \Exception(implode(', ', $arrRes['errors']));
+        }
+
         return $arrRes[$cmd];
     }
 }
