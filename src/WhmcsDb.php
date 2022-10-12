@@ -73,16 +73,16 @@ class WhmcsDb
     }
 
     /**
-     * @return string[]
+     * @return array[] Indexed by domain name
      */
-    public function getActiveDomainNames()
+    public function getActiveDomains()
     {
         return $this->pdo->query("
-            select domain
+            select domain, registrar
             from tbldomains
             where status = 'Active'
             order by domain asc
-        ")->fetchAll(PDO::FETCH_COLUMN);
+        ")->fetchAll(PDO::FETCH_UNIQUE);
     }
 
     public function getActiveDomainsListByClientId()
