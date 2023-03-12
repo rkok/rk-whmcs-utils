@@ -3,6 +3,7 @@
 namespace RKWhmcsUtils;
 
 use PDO;
+use RKWhmcsUtils\Models\WhmcsAffiliate;
 use RKWhmcsUtils\Models\WhmcsClient;
 use RKWhmcsUtils\Models\WhmcsInvoice;
 
@@ -28,15 +29,23 @@ class WhmcsDb
         ]);
     }
 
-    public function getAffiliates()
+    /**
+     * @return WhmcsAffiliate[]
+     */
+    public function getAffiliates(): array
     {
-        return $this->pdo->query("
+        $results = $this->pdo->query("
             select a.id, a.clientid, uc.auth_user_id userid, c.firstname, c.lastname, c.companyname, c.email, a.paytype, a.payamount
             from tblaffiliates a
             join tblclients c on a.clientid = c.id 
             join tblusers_clients uc on c.id = uc.client_id
             where a.payamount != 0;
-        ")->fetchAll(PDO::FETCH_UNIQUE);
+        ")->fetchAll();
+        $return = [];
+        foreach ($results as $row) {
+            $return[$row['id']] = WhmcsAffiliate::fromDbRow($row);
+        }
+        return $return;
     }
 
     public function getClientAffiliateIds()

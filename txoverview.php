@@ -75,13 +75,12 @@ include(__DIR__ . '/inc/00-head.php');
             $affiliate = $affiliates[$clientAffiliateIds[$clientId]];
         }
 
-        $affiliateDisplay = $affiliate ? $affiliate['companyname'] : '';
         $commissionDisplay = '';
         if ($affiliate && $isPaid) {
-            if ($affiliate['paytype'] === 'percentage') {
-                $perc = (float)$affiliate['payamount'];
+            if ($affiliate->getPayType() === 'percentage') {
+                $perc = $affiliate->getPayAmount();
                 $commissionAmount = $invoice->getSubTotal() * ($perc / 100);
-                $commissionDisplay = str_pad("(" . $affiliate['payamount'] . "%)", 6, ' ', STR_PAD_LEFT) . " ";
+                $commissionDisplay = str_pad("(" . $affiliate->getPayAmount() . "%)", 6, ' ', STR_PAD_LEFT) . " ";
                 $commissionDisplay .= str_pad(number_format($commissionAmount, 2), 6, ' ', STR_PAD_LEFT);
             } else {
                 $commissionDisplay = 'UNSUPPORTED PAYTYPE';
@@ -114,7 +113,7 @@ include(__DIR__ . '/inc/00-head.php');
             <td><a target="_blank"
                    href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoice->getId() ?>&language=english">PDF</a></td>
             <td><?= $invoice->getUserId() ?></td>
-            <td class="thin"><?= $affiliateDisplay ?></td>
+            <td class="thin"><?= $affiliate ? $affiliate->getDisplayName() : '' ?></td>
             <td class="right-align"><?= $commissionDisplay ?></td>
         </tr>
     <?php endforeach; ?>
