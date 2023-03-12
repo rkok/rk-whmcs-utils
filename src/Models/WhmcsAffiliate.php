@@ -28,14 +28,6 @@ class WhmcsAffiliate
             ->setPayAmount((float)$row['payamount']);
     }
 
-    public function calculateCommission(float $total)
-    {
-        if ($this->getPayType() === 'percentage') {
-            return $total * ($this->getPayAmount() / 100);
-        }
-        throw new \Exception("Unsupported affiliate pay type: {$this->getPayType()}");
-    }
-
     public function getDisplayName(): string
     {
         return $this->getCompanyName();

@@ -8,13 +8,7 @@ $config = Config::getInstance();
 
 $db = WhmcsDb::buildInstance();
 
-$invoices = $db->getInvoices();
-
-$clients = $db->getClients();
-
-$affiliates = $db->getAffiliates();
-
-$clientAffiliateIds = $db->getClientAffiliateIds();
+$repo = new WhmcsRepository($db);
 
 include(__DIR__ . '/inc/00-head.php');
 
@@ -48,26 +42,19 @@ include(__DIR__ . '/inc/00-head.php');
     <th>Commission</th>
     </thead>
     <tbody>
-    <?php foreach ($invoices as $invoiceId => $invoice):
-        $clientId = null;
+    <?php foreach ($repo->getTransactionList() as $transaction):
+        $invoice = $transaction->getInvoice();
 
-        if (isset($clients[$invoice->getClientId()])) {
-            $clientId = $invoice->getClientId();
-            $client = $clients[$clientId];
-            $clientDisplay = $client->getDisplayName();
-        } else {
-            $clientDisplay = 'Error matching client';
-        }
+        $client = $transaction->getClient();
+        $clientDisplay = $client ? $client->getDisplayName() : 'Error matching client';
+        $clientId = $client ? $client->getId() : null;
 
-        $affiliate = null;
-        if (isset($clientAffiliateIds[$clientId])) {
-            $affiliate = $affiliates[$clientAffiliateIds[$clientId]];
-        }
+        $affiliate = $transaction->getAffiliate();
 
         $commissionDisplay = '';
         if ($affiliate && $invoice->isPaid()) {
             try {
-                $commissionAmount = $affiliate->calculateCommission($invoice->getSubTotal());
+                $commissionAmount = $transaction->calculateAffiliateCommission();
                 $commissionDisplay = str_pad("(" . $affiliate->getPayAmount() . "%)", 6, ' ', STR_PAD_LEFT) . " ";
                 $commissionDisplay .= str_pad(number_format($commissionAmount, 2), 6, ' ', STR_PAD_LEFT);
             } catch (\Exception $e) {
@@ -78,7 +65,7 @@ include(__DIR__ . '/inc/00-head.php');
         ?>
         <tr>
             <td><a target="_blank"
-                   href="<?= $config->whmcsAdminRoot ?>invoices.php?action=edit&id=<?= $invoiceId ?>"><?= $invoiceId ?>
+                   href="<?= $config->whmcsAdminRoot ?>invoices.php?action=edit&id=<?= $invoice->getId() ?>"><?= $invoice->getId() ?>
             </td>
             <td><?= $invoice->getDate()->format('Y-m-d') ?></td>
             <td class="thin trimoverflow"><a target="_blank"
@@ -104,7 +91,7 @@ include(__DIR__ . '/inc/00-head.php');
                     : ''; ?></td>
             <td class="right-align"><?= number_format($invoice->getTotal(), 2) ?></td>
             <td><a target="_blank"
-                   href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoiceId ?>&language=english">PDF</a>
+                   href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoice->getId() ?>&language=english">PDF</a>
             </td>
             <td><?= $invoice->getUserId() ?></td>
             <td class="thin"><?= $affiliate ? $affiliate->getDisplayName() : '' ?></td>
