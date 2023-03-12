@@ -25,6 +25,7 @@ include(__DIR__ . '/inc/00-head.php');
 </style>
 </head>
 <body>
+<p><a href="ajax/tx-export.php">Export as XLSX</a></p>
 <table>
     <thead>
     <th>Invoice ID</th>
