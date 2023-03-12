@@ -9,7 +9,6 @@ $config = Config::getInstance();
 $db = WhmcsDb::buildInstance();
 
 $invoices = $db->getInvoices();
-krsort($invoices);
 
 $invoiceItems = $db->getInvoiceItemsByInvoiceId();
 
@@ -30,6 +29,7 @@ include(__DIR__ . '/inc/00-head.php');
     .invoice-status {
         color: #f00
     }
+
 
     .invoice-status.paid {
         color: chartreuse;
@@ -54,22 +54,22 @@ include(__DIR__ . '/inc/00-head.php');
     <th>Commission</th>
     </thead>
     <tbody>
-    <?php foreach ($invoices as $invoiceId => $invoice):
-        $isPaid = $invoice['status'] === 'Paid';
-        $tax = (float)$invoice['tax'];
-        $taxRate = (float)$invoice['taxrate'];
+    <?php foreach ($invoices as $invoice):
+        $isPaid = $invoice->getStatus() === 'Paid';
+        $tax = $invoice->getTax();
+        $taxRate = $invoice->getTaxRate();
         $taxDisplay = $tax > 0
             ? "($taxRate%) " . str_pad(number_format($tax, 2), 6, ' ', STR_PAD_LEFT)
             : '';
-        $credit = (float)$invoice['credit'];
+        $credit = $invoice->getCredit();
         $creditDisplay = $credit > 0
             ? "-" . str_pad(number_format($credit, 2), 6, ' ', STR_PAD_LEFT)
             : '';
 
         $clientId = null;
 
-        if (isset($clients[$invoice['clientid']])) {
-            $clientId = $invoice['clientid'];
+        if (isset($clients[$invoice->getClientId()])) {
+            $clientId = $invoice->getClientId();
             $client = $clients[$clientId];
             $clientDisplay = trim($client['companyname']);
             if (!$clientDisplay) {
@@ -91,7 +91,7 @@ include(__DIR__ . '/inc/00-head.php');
         if ($affiliate && $isPaid) {
             if ($affiliate['paytype'] === 'percentage') {
                 $perc = (float)$affiliate['payamount'];
-                $commissionAmount = (float)$invoice['subtotal'] * ($perc / 100);
+                $commissionAmount = $invoice->getSubTotal() * ($perc / 100);
                 $commissionDisplay = str_pad("(" . $affiliate['payamount'] . "%)", 6, ' ', STR_PAD_LEFT) . " ";
                 $commissionDisplay .= str_pad(number_format($commissionAmount, 2), 6, ' ', STR_PAD_LEFT);
             } else {
@@ -102,29 +102,29 @@ include(__DIR__ . '/inc/00-head.php');
         ?>
         <tr>
             <td><a target="_blank"
-                   href="<?= $config->whmcsAdminRoot ?>invoices.php?action=edit&id=<?= $invoiceId ?>"><?= $invoiceId ?>
+                   href="<?= $config->whmcsAdminRoot ?>invoices.php?action=edit&id=<?= $invoice->getId() ?>"><?= $invoice->getId() ?>
             </td>
-            <td><?= $invoice['date'] ?></td>
+            <td><?= $invoice->getDate()->format('Y-m-d') ?></td>
             <td class="thin trimoverflow"><a target="_blank"
                                              href="<?= $config->whmcsAdminRoot ?>clientssummary.php?userid=<?= $clientId ?>"><?= $clientDisplay ?></a>
             </td>
             <td class="invoice-status <?= $isPaid ? 'paid' : '' ?>">
-                <?= $invoice['status'] ?>
+                <?= $invoice->getStatus() ?>
                 <?php if ($isPaid):
-                    $dtPaid = new \DateTime($invoice['datepaid']);
+                    $dtPaid = $invoice->getDatePaid();
                     ?>
-                    <span class="paid-at" title="<?= $invoice['datepaid'] ?>"> (<?= $dtPaid->format('Y-m-d') ?>)
+                    <span class="paid-at" title="<?= $dtPaid->format('Y-m-d H:i:s') ?>"> (<?= $dtPaid->format('Y-m-d') ?>)
               </span>
                 <?php endif; ?>
             </td>
-            <td><?= $invoice['paymentmethod'] ?></td>
-            <td class="right-align"><?= $invoice['subtotal'] ?></td>
+            <td><?= $invoice->getPaymentMethod() ?></td>
+            <td class="right-align"><?= number_format($invoice->getSubTotal(), 2) ?></td>
             <td><?= $taxDisplay ?></td>
             <td class="right-align"><?= $creditDisplay ?></td>
-            <td class="right-align"><?= $invoice['total'] ?></td>
+            <td class="right-align"><?= number_format($invoice->getTotal(), 2) ?></td>
             <td><a target="_blank"
-                   href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoiceId ?>&language=english">PDF</a></td>
-            <td><?= $invoice['userid'] ?></td>
+                   href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoice->getId() ?>&language=english">PDF</a></td>
+            <td><?= $invoice->getUserId() ?></td>
             <td class="thin"><?= $affiliateDisplay ?></td>
             <td class="right-align"><?= $commissionDisplay ?></td>
         </tr>

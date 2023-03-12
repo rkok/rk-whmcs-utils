@@ -3,6 +3,7 @@
 namespace RKWhmcsUtils;
 
 use PDO;
+use RKWhmcsUtils\Models\WhmcsInvoice;
 
 class WhmcsDb
 {
@@ -37,7 +38,8 @@ class WhmcsDb
         ")->fetchAll(PDO::FETCH_UNIQUE);
     }
 
-    public function getClientAffiliateIds() {
+    public function getClientAffiliateIds()
+    {
         return $this->pdo->query("
             select uc_child.client_id, a.id
             from tblaffiliates a
@@ -117,17 +119,22 @@ class WhmcsDb
     }
 
     /**
-     * @return array|false
+     * Ordered by ID desc (latest invoice first)
+     * @return WhmcsInvoice[]
      */
-    public function getInvoices()
+    public function getInvoices(): array
     {
         // NOTE: deliberately aliasing 'userid' to 'clientid' -
         // there is a hideous misnomer hidden in WHMCS where tblinvoices.userid actually
         // refers to an entry in tblCLIENT, not tblUSERS!
-        return $this->pdo->query("
+        $results = $this->pdo->query("
             select *, userid as clientid
             from tblinvoices
-        ")->fetchAll(PDO::FETCH_UNIQUE);
+            order by id desc
+        ")->fetchAll();
+        return array_map(function ($result) {
+            return WhmcsInvoice::fromDbRow($result);
+        }, $results ?? []);
     }
 
     /**
@@ -155,7 +162,8 @@ class WhmcsDb
     /**
      * @return array|false
      */
-    public function getClientsByUserId() {
+    public function getClientsByUserId()
+    {
         return $this->pdo->query("
             select u.id userid, uc.owner is_owner, uc.permissions, c.*
             from tblusers u
