@@ -91,7 +91,7 @@ include(__DIR__ . '/inc/00-head.php');
         if ($affiliate && $isPaid) {
             if ($affiliate['paytype'] === 'percentage') {
                 $perc = (float)$affiliate['payamount'];
-                $commissionAmount = (float)$invoice['total'] * ($perc / 100);
+                $commissionAmount = (float)$invoice['subtotal'] * ($perc / 100);
                 $commissionDisplay = str_pad("(" . $affiliate['payamount'] . "%)", 6, ' ', STR_PAD_LEFT) . " ";
                 $commissionDisplay .= str_pad(number_format($commissionAmount, 2), 6, ' ', STR_PAD_LEFT);
             } else {
