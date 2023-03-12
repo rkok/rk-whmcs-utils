@@ -3,6 +3,7 @@
 namespace RKWhmcsUtils;
 
 use PDO;
+use RKWhmcsUtils\Models\WhmcsClient;
 use RKWhmcsUtils\Models\WhmcsInvoice;
 
 class WhmcsDb
@@ -108,14 +109,19 @@ class WhmcsDb
     }
 
     /**
-     * @return array|false
+     * @return WhmcsClient[]
      */
-    public function getClients()
+    public function getClients(): array
     {
-        return $this->pdo->query("
+        $results = $this->pdo->query("
             select *
             from tblclients
         ")->fetchAll(PDO::FETCH_UNIQUE);
+        $return = [];
+        foreach ($results as $clientId => $row) {
+            $return[$clientId] = WhmcsClient::fromDbRow([...$row, 'id' => $clientId]);
+        }
+        return $return;
     }
 
     /**

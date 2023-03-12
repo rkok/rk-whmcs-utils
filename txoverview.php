@@ -65,12 +65,7 @@ include(__DIR__ . '/inc/00-head.php');
         if (isset($clients[$invoice->getClientId()])) {
             $clientId = $invoice->getClientId();
             $client = $clients[$clientId];
-            $clientDisplay = trim($client['companyname']);
-            if (!$clientDisplay) {
-                // Fallback on client first/last name
-                $clientDisplay = trim($client['firstname'] . " " . $client['lastname']);
-            }
-            $clientDisplay .= " ({$clientId})";
+            $clientDisplay = $client->getDisplayName();
         } else {
             $clientDisplay = 'Error matching client';
         }
