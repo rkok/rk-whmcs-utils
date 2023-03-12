@@ -10,13 +10,7 @@ $db = WhmcsDb::buildInstance();
 
 $invoices = $db->getInvoices();
 
-$invoiceItems = $db->getInvoiceItemsByInvoiceId();
-
-$users = $db->getUsers();
-
 $clients = $db->getClients();
-
-$clientsByUserId = $db->getClientsByUserId();
 
 $affiliates = $db->getAffiliates();
 
