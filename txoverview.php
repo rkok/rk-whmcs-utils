@@ -49,17 +49,6 @@ include(__DIR__ . '/inc/00-head.php');
     </thead>
     <tbody>
     <?php foreach ($invoices as $invoice):
-        $isPaid = $invoice->getStatus() === 'Paid';
-        $tax = $invoice->getTax();
-        $taxRate = $invoice->getTaxRate();
-        $taxDisplay = $tax > 0
-            ? "($taxRate%) " . str_pad(number_format($tax, 2), 6, ' ', STR_PAD_LEFT)
-            : '';
-        $credit = $invoice->getCredit();
-        $creditDisplay = $credit > 0
-            ? "-" . str_pad(number_format($credit, 2), 6, ' ', STR_PAD_LEFT)
-            : '';
-
         $clientId = null;
 
         if (isset($clients[$invoice->getClientId()])) {
@@ -76,14 +65,13 @@ include(__DIR__ . '/inc/00-head.php');
         }
 
         $commissionDisplay = '';
-        if ($affiliate && $isPaid) {
-            if ($affiliate->getPayType() === 'percentage') {
-                $perc = $affiliate->getPayAmount();
-                $commissionAmount = $invoice->getSubTotal() * ($perc / 100);
+        if ($affiliate && $invoice->isPaid()) {
+            try {
+                $commissionAmount = $affiliate->calculateCommission($invoice->getSubTotal());
                 $commissionDisplay = str_pad("(" . $affiliate->getPayAmount() . "%)", 6, ' ', STR_PAD_LEFT) . " ";
                 $commissionDisplay .= str_pad(number_format($commissionAmount, 2), 6, ' ', STR_PAD_LEFT);
-            } else {
-                $commissionDisplay = 'UNSUPPORTED PAYTYPE';
+            } catch (\Exception $e) {
+                $commissionDisplay = 'ERROR';
             }
         }
 
@@ -96,22 +84,28 @@ include(__DIR__ . '/inc/00-head.php');
             <td class="thin trimoverflow"><a target="_blank"
                                              href="<?= $config->whmcsAdminRoot ?>clientssummary.php?userid=<?= $clientId ?>"><?= $clientDisplay ?></a>
             </td>
-            <td class="invoice-status <?= $isPaid ? 'paid' : '' ?>">
+            <td class="invoice-status <?= $invoice->isPaid() ? 'paid' : '' ?>">
                 <?= $invoice->getStatus() ?>
-                <?php if ($isPaid):
+                <?php if ($invoice->isPaid()):
                     $dtPaid = $invoice->getDatePaid();
                     ?>
-                    <span class="paid-at" title="<?= $dtPaid->format('Y-m-d H:i:s') ?>"> (<?= $dtPaid->format('Y-m-d') ?>)
+                    <span class="paid-at"
+                          title="<?= $dtPaid->format('Y-m-d H:i:s') ?>"> (<?= $dtPaid->format('Y-m-d') ?>)
               </span>
                 <?php endif; ?>
             </td>
             <td><?= $invoice->getPaymentMethod() ?></td>
             <td class="right-align"><?= number_format($invoice->getSubTotal(), 2) ?></td>
-            <td><?= $taxDisplay ?></td>
-            <td class="right-align"><?= $creditDisplay ?></td>
+            <td><?= $invoice->getTax() > 0
+                    ? "({$invoice->getTaxRate()}%) " . str_pad(number_format($invoice->getTax(), 2), 6, ' ', STR_PAD_LEFT)
+                    : ''; ?></td>
+            <td class="right-align"><?= $invoice->getCredit() > 0
+                    ? "-" . str_pad(number_format($invoice->getCredit(), 2), 6, ' ', STR_PAD_LEFT)
+                    : ''; ?></td>
             <td class="right-align"><?= number_format($invoice->getTotal(), 2) ?></td>
             <td><a target="_blank"
-                   href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoice->getId() ?>&language=english">PDF</a></td>
+                   href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoice->getId() ?>&language=english">PDF</a>
+            </td>
             <td><?= $invoice->getUserId() ?></td>
             <td class="thin"><?= $affiliate ? $affiliate->getDisplayName() : '' ?></td>
             <td class="right-align"><?= $commissionDisplay ?></td>

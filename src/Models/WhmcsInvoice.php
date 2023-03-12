@@ -34,6 +34,11 @@ class WhmcsInvoice
             ->setPaymentMethod($row['paymentmethod']);
     }
 
+    public function isPaid(): bool
+    {
+        return $this->getStatus() === 'Paid';
+    }
+
     /**
      * @return int
      */
