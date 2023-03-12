@@ -48,7 +48,7 @@ include(__DIR__ . '/inc/00-head.php');
     <th>Commission</th>
     </thead>
     <tbody>
-    <?php foreach ($invoices as $invoice):
+    <?php foreach ($invoices as $invoiceId => $invoice):
         $clientId = null;
 
         if (isset($clients[$invoice->getClientId()])) {
@@ -78,7 +78,7 @@ include(__DIR__ . '/inc/00-head.php');
         ?>
         <tr>
             <td><a target="_blank"
-                   href="<?= $config->whmcsAdminRoot ?>invoices.php?action=edit&id=<?= $invoice->getId() ?>"><?= $invoice->getId() ?>
+                   href="<?= $config->whmcsAdminRoot ?>invoices.php?action=edit&id=<?= $invoiceId ?>"><?= $invoiceId ?>
             </td>
             <td><?= $invoice->getDate()->format('Y-m-d') ?></td>
             <td class="thin trimoverflow"><a target="_blank"
@@ -104,7 +104,7 @@ include(__DIR__ . '/inc/00-head.php');
                     : ''; ?></td>
             <td class="right-align"><?= number_format($invoice->getTotal(), 2) ?></td>
             <td><a target="_blank"
-                   href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoice->getId() ?>&language=english">PDF</a>
+                   href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoiceId ?>&language=english">PDF</a>
             </td>
             <td><?= $invoice->getUserId() ?></td>
             <td class="thin"><?= $affiliate ? $affiliate->getDisplayName() : '' ?></td>

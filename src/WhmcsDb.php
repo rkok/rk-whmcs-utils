@@ -147,9 +147,11 @@ class WhmcsDb
             from tblinvoices
             order by id desc
         ")->fetchAll();
-        return array_map(function ($result) {
-            return WhmcsInvoice::fromDbRow($result);
-        }, $results ?? []);
+        $return = [];
+        foreach ($results as $row) {
+            $return[$row['id']] = WhmcsInvoice::fromDbRow($row);
+        }
+        return $return;
     }
 
     /**
