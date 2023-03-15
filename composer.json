@@ -8,6 +8,7 @@
     "require": {
         "mtownsend/xml-to-array": "^2.0",
         "ext-pdo": "*",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "phpoffice/phpspreadsheet": "^1.28"
     }
 }

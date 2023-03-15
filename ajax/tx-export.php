@@ -2,14 +2,16 @@
 
 namespace RKWhmcsUtils;
 
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+
 require_once(__DIR__ . '/../vendor/autoload.php');
-require_once(__DIR__ . '/../lib/PHPExcel.php');
 
 $repo = new WhmcsRepository(WhmcsDb::buildInstance());
 
-$excel = new \PHPExcel();
+$excel = new Spreadsheet();
 
-$sheet = $excel->getSheet();
+$worksheet = $excel->getActiveSheet();
 
 $columns = [
     'Invoice ID',
@@ -29,10 +31,9 @@ $columns = [
 ];
 
 // Write column headings
-$iter = (new \PHPExcel_Worksheet_Row($sheet))->getCellIterator();
-foreach ($columns as $column) {
-    $iter->current()->setValue($column);
-    $iter->next();
+foreach (range('A', 'Z') as $i => $colId) {
+    if (!isset($columns[$i])) break;
+    $worksheet->setCellValue($colId . "1", $columns[$i]);
 }
 
 foreach ($repo->getTransactionList() as $i => $transaction) {
@@ -61,11 +62,11 @@ foreach ($repo->getTransactionList() as $i => $transaction) {
 
     foreach (range('A', 'Z') as $j => $colId) {
         if (!isset($rowData[$j])) break;
-        $sheet->setCellValue("$colId$rowId", $rowData[$j]);
+        $worksheet->setCellValue("$colId$rowId", $rowData[$j]);
     }
 }
 
-$writer = \PHPExcel_IOFactory::createWriter($excel, 'Excel2007');
+$writer = IOFactory::createWriter($excel, 'Xlsx');
 
 $exportName = "whmcs-txns-" . date('Ymd-His') . '.xlsx';
 
