@@ -66,10 +66,15 @@ foreach ($repo->getTransactionList() as $i => $transaction) {
     }
 }
 
+// Auto-size all columns
+foreach ($worksheet->getColumnIterator() as $column) {
+    $worksheet->getColumnDimension($column->getColumnIndex())->setAutoSize(true);
+}
+
 $writer = IOFactory::createWriter($excel, 'Xlsx');
 
 $exportName = "whmcs-txns-" . date('Ymd-His') . '.xlsx';
 
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-header('Content-Disposition: attachment; filename="'.$exportName.'"');
+header('Content-Disposition: attachment; filename="' . $exportName . '"');
 $writer->save('php://output');
