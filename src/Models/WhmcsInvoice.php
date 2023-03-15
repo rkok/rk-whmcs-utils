@@ -34,6 +34,16 @@ class WhmcsInvoice
             ->setPaymentMethod($row['paymentmethod']);
     }
 
+    public function generateInvoiceEditUrlPath(): string
+    {
+        return 'invoices.php?action=edit&id=' . $this->getId();
+    }
+
+    public function generateInvoiceDownloadUrlPath(): string
+    {
+        return "dl.php?type=i&id={$this->getId()}&language=english";
+    }
+
     public function isPaid(): bool
     {
         return $this->getStatus() === 'Paid';

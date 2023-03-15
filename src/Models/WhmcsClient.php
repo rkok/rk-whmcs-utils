@@ -18,7 +18,13 @@ class WhmcsClient
             ->setLastName($row['lastname']);
     }
 
-    public function getDisplayName() {
+    public function generateClientViewUrlPath(): string
+    {
+        return "clientssummary.php?userid=" . $this->getId();
+    }
+
+    public function getDisplayName()
+    {
         if ($this->getCompanyName()) {
             $name = trim($this->getCompanyName());
         } else {

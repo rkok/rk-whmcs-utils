@@ -66,11 +66,11 @@ include(__DIR__ . '/inc/00-head.php');
         ?>
         <tr>
             <td><a target="_blank"
-                   href="<?= $config->whmcsAdminRoot ?>invoices.php?action=edit&id=<?= $invoice->getId() ?>"><?= $invoice->getId() ?>
+                   href="<?= $config->whmcsAdminRoot . $invoice->generateInvoiceEditUrlPath() ?>"><?= $invoice->getId() ?>
             </td>
             <td><?= $invoice->getDate()->format('Y-m-d') ?></td>
             <td class="thin trimoverflow"><a target="_blank"
-                                             href="<?= $config->whmcsAdminRoot ?>clientssummary.php?userid=<?= $clientId ?>"><?= $clientDisplay ?></a>
+                                             href="<?= $config->whmcsAdminRoot . $client->generateClientViewUrlPath() ?>"><?= $clientDisplay ?></a>
             </td>
             <td class="invoice-status <?= $invoice->isPaid() ? 'paid' : '' ?>">
                 <?= $invoice->getStatus() ?>
@@ -92,7 +92,7 @@ include(__DIR__ . '/inc/00-head.php');
                     : ''; ?></td>
             <td class="right-align"><?= number_format($invoice->getTotal(), 2) ?></td>
             <td><a target="_blank"
-                   href="<?= $config->whmcsRoot ?>dl.php?type=i&id=<?= $invoice->getId() ?>&language=english">PDF</a>
+                   href="<?= $config->whmcsRoot . $invoice->generateInvoiceDownloadUrlPath() ?>">PDF</a>
             </td>
             <td><?= $invoice->getUserId() ?></td>
             <td class="thin"><?= $affiliate ? $affiliate->getDisplayName() : '' ?></td>

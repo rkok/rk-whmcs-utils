@@ -9,6 +9,8 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 
 $repo = new WhmcsRepository(WhmcsDb::buildInstance());
 
+$config = Config::getInstance();
+
 $excel = new Spreadsheet();
 
 $worksheet = $excel->getActiveSheet();
@@ -26,6 +28,7 @@ $columns = [
     '+ Tax',
     '- Credit',
     'Total',
+    'PDF',
     'Affiliate ID',
     'Affiliate',
     'Commission',
@@ -45,9 +48,9 @@ foreach ($repo->getTransactionList() as $i => $transaction) {
     $affiliate = $transaction->getAffiliate();
 
     $rowData = [
-        $invoice->getId(),
+        $invoice->getId() . ' ', // Add space, else phpSpreadsheet won't add hyperlink for some reason
         $invoice->getDate()->format('Y-m-d'),
-        $client ? $client->getId() : '',
+        $client ? $client->getId() . ' ' : '', // Add space, else phpSpreadsheet won't add hyperlink for some reason
         $client ? $client->getDisplayName() : '',
         $invoice->getStatus(),
         $invoice->getPaymentMethod(),
@@ -55,10 +58,11 @@ foreach ($repo->getTransactionList() as $i => $transaction) {
         $invoice->getTax(),
         $invoice->getCredit(),
         $invoice->getTotal(),
+        'PDF',
         $affiliate ? $affiliate->getId() : '',
         $affiliate ? $affiliate->getDisplayName() : '',
         $affiliate ? $transaction->calculateAffiliateCommission() : '',
-        $affiliate ? $affiliate->getPayAmount() : ''
+        $affiliate ? $affiliate->getPayAmount() : '',
     ];
 
     $rowId = $i + 2;
@@ -67,6 +71,10 @@ foreach ($repo->getTransactionList() as $i => $transaction) {
         if (!isset($rowData[$j])) break;
         $worksheet->setCellValue("$colId$rowId", $rowData[$j]);
     }
+
+    $worksheet->getCell("A$rowId")->getHyperlink()->setUrl($config->whmcsAdminRoot . $invoice->generateInvoiceEditUrlPath());
+    $worksheet->getCell("C$rowId")->getHyperlink()->setUrl($config->whmcsAdminRoot . $client->generateClientViewUrlPath());
+    $worksheet->getCell("K$rowId")->setValue('PDF')->getHyperlink()->setUrl($config->whmcsRoot . $invoice->generateInvoiceDownloadUrlPath());
 }
 
 // Auto-size all columns
