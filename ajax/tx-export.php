@@ -13,6 +13,8 @@ $excel = new Spreadsheet();
 
 $worksheet = $excel->getActiveSheet();
 
+$alphabet = range('A', 'Z');
+
 $columns = [
     'Invoice ID',
     'Created At',
@@ -31,9 +33,10 @@ $columns = [
 ];
 
 // Write column headings
-foreach (range('A', 'Z') as $i => $colId) {
+foreach ($alphabet as $i => $colId) {
     if (!isset($columns[$i])) break;
     $worksheet->setCellValue($colId . "1", $columns[$i]);
+    $worksheet->getCell($colId . "1")->getStyle()->getFont()->setBold(true);
 }
 
 foreach ($repo->getTransactionList() as $i => $transaction) {
@@ -60,7 +63,7 @@ foreach ($repo->getTransactionList() as $i => $transaction) {
 
     $rowId = $i + 2;
 
-    foreach (range('A', 'Z') as $j => $colId) {
+    foreach ($alphabet as $j => $colId) {
         if (!isset($rowData[$j])) break;
         $worksheet->setCellValue("$colId$rowId", $rowData[$j]);
     }
