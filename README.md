@@ -28,3 +28,4 @@ Just run `php -S localhost:8080` and point your browser to it.
 
 - Hardcoded VAT rate of 20%
 - Probably some bugs matching users to clients and vice versa
+- Not currency-aware
