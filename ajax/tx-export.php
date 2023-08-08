@@ -19,10 +19,11 @@ $alphabet = range('A', 'Z');
 
 $columns = [
     'Invoice ID',
-    'Created At',
+    'Created On',
     'Client ID',
     'Client',
     'Status',
+    'Paid On',
     'Payment method',
     'Subtotal',
     '+ Tax',
@@ -53,6 +54,7 @@ foreach ($repo->getTransactionList() as $i => $transaction) {
         $client ? $client->getId() . ' ' : '', // Add space, else phpSpreadsheet won't add hyperlink for some reason
         $client ? $client->getDisplayName() : '',
         $invoice->getStatus(),
+        $invoice->getStatus() === 'Paid' ? $invoice->getDatePaid() : '',
         $invoice->getPaymentMethod(),
         $invoice->getSubTotal(),
         $invoice->getTax(),
