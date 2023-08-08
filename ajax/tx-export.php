@@ -88,6 +88,7 @@ $writer = IOFactory::createWriter($excel, 'Xlsx');
 
 $exportName = "whmcs-txns-" . date('Ymd-His') . '.xlsx';
 
+header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 header('Content-Disposition: attachment; filename="' . $exportName . '"');
 $writer->save('php://output');
