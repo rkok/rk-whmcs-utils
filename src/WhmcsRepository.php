@@ -22,6 +22,7 @@ class WhmcsRepository
     public function getTransactionList(): array
     {
         $invoices = $this->db->getInvoices();
+        $invoiceItems = $this->db->getInvoiceItemsByInvoiceId();
         $clients = $this->db->getClients();
         $affiliates = $this->db->getAffiliates();
         $clientAffiliateIds = $this->db->getClientAffiliateIds();
@@ -29,6 +30,10 @@ class WhmcsRepository
         $transactions = [];
 
         foreach ($invoices as $invoice) {
+            if (isset($invoiceItems[$invoice->getId()])) {
+                $invoice->setItems($invoiceItems[$invoice->getId()]);
+            }
+
             $transaction = new WhmcsTransaction($invoice);
 
             if (isset($clients[$invoice->getClientId()])) {

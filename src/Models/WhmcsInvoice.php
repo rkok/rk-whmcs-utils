@@ -16,6 +16,10 @@ class WhmcsInvoice
     protected \DateTime $date;
     protected ?\DateTime $datePaid;
     protected string $paymentMethod;
+    /**
+     * @var WhmcsInvoiceItem[]
+     */
+    protected array $items = [];
 
     public static function fromDbRow(array $row): WhmcsInvoice
     {
@@ -262,6 +266,24 @@ class WhmcsInvoice
     public function setPaymentMethod(string $paymentMethod): WhmcsInvoice
     {
         $this->paymentMethod = $paymentMethod;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getItems(): array
+    {
+        return $this->items;
+    }
+
+    /**
+     * @param array $items
+     * @return WhmcsInvoice
+     */
+    public function setItems(array $items): WhmcsInvoice
+    {
+        $this->items = $items;
         return $this;
     }
 }
