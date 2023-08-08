@@ -9,6 +9,7 @@
         "mtownsend/xml-to-array": "^2.0",
         "ext-pdo": "*",
         "ext-curl": "*",
-        "phpoffice/phpspreadsheet": "^1.28"
+        "phpoffice/phpspreadsheet": "^1.28",
+        "ramsey/uuid": "^4.7"
     }
 }

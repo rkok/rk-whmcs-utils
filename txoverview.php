@@ -25,7 +25,10 @@ include(__DIR__ . '/inc/00-head.php');
 </style>
 </head>
 <body>
-<p><a href="ajax/tx-export.php">Export as XLSX</a></p>
+<p>
+    <a href="ajax/tx-export.php">Export XLSX</a>
+    <a href="ajax/tx-export-gnucash.php">Export Gnucash CSV</a>
+</p>
 <table>
     <thead>
     <th>Invoice ID</th>
@@ -43,7 +46,7 @@ include(__DIR__ . '/inc/00-head.php');
     <th>Commission</th>
     </thead>
     <tbody>
-    <?php foreach ($repo->getTransactionList() as $transaction):
+    <?php foreach (array_reverse($repo->getTransactionList()) as $transaction):
         $invoice = $transaction->getInvoice();
 
         $client = $transaction->getClient();

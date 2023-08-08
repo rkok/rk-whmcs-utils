@@ -6,6 +6,7 @@ use PDO;
 use RKWhmcsUtils\Models\WhmcsAffiliate;
 use RKWhmcsUtils\Models\WhmcsClient;
 use RKWhmcsUtils\Models\WhmcsInvoice;
+use RKWhmcsUtils\Models\WhmcsInvoiceItem;
 
 class WhmcsDb
 {
@@ -145,7 +146,7 @@ class WhmcsDb
         $results = $this->pdo->query("
             select *, userid as clientid
             from tblinvoices
-            order by id desc
+            order by id asc
         ")->fetchAll();
         $return = [];
         foreach ($results as $row) {
@@ -159,10 +160,17 @@ class WhmcsDb
      */
     public function getInvoiceItemsByInvoiceId()
     {
-        return $this->pdo->query("
+        $results = $this->pdo->query("
             select invoiceid, i.*
             from tblinvoiceitems i
         ")->fetchAll(PDO::FETCH_GROUP);
+        $return = [];
+        foreach($results as $invoiceId => $itemRows) {
+            $return[$invoiceId] = array_map(function ($itemRow) {
+                return WhmcsInvoiceItem::fromDbRow($itemRow);
+            }, $itemRows);
+        }
+        return $return;
     }
 
     /**
