@@ -90,7 +90,7 @@ foreach ($repo->getTransactionList() as $transaction) {
 
     // Sub-rows - income sides
     foreach ($invoice->getItems() as $item) {
-        if ($item->getAmount() === 0) {
+        if ($item->getAmount() === 0.0) {
             continue;
         }
 

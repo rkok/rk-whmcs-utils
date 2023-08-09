@@ -12,7 +12,7 @@ class WhmcsInvoiceItem
      */
     protected string $type;
     protected string $description;
-    protected int $amount;
+    protected float $amount;
     protected bool $taxed;
     protected ?\DateTime $dueDate;
     protected string $paymentMethod;
@@ -26,7 +26,7 @@ class WhmcsInvoiceItem
             ->setUserId($row['userid'])
             ->setType($row['type'])
             ->setDescription($row['description'])
-            ->setAmount($row['amount'])
+            ->setAmount((float)$row['amount'])
             ->setTaxed((bool)$row['taxed'])
             ->setDueDate($row['duedate'] ? new \DateTime($row['duedate']) : null)
             ->setPaymentMethod($row['paymentmethod'])
@@ -124,18 +124,18 @@ class WhmcsInvoiceItem
     }
 
     /**
-     * @return int
+     * @return float
      */
-    public function getAmount(): int
+    public function getAmount(): float
     {
         return $this->amount;
     }
 
     /**
-     * @param int $amount
+     * @param float $amount
      * @return WhmcsInvoiceItem
      */
-    public function setAmount(int $amount): WhmcsInvoiceItem
+    public function setAmount(float $amount): WhmcsInvoiceItem
     {
         $this->amount = $amount;
         return $this;
