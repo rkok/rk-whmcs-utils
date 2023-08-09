@@ -20,9 +20,9 @@ class WhmcsAffiliate
             ->setId($row['id'])
             ->setClientId($row['clientid'])
             ->setUserId($row['userid'])
-            ->setFirstName($row['firstname'])
-            ->setLastName($row['lastname'])
-            ->setCompanyName($row['companyname'])
+            ->setFirstName(htmlspecialchars_decode($row['firstname']))
+            ->setLastName(htmlspecialchars_decode($row['lastname']))
+            ->setCompanyName(htmlspecialchars_decode($row['companyname'] ?: ''))
             ->setEmail($row['email'])
             ->setPayType($row['paytype'])
             ->setPayAmount((float)$row['payamount']);

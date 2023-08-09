@@ -104,4 +104,22 @@ class WhmcsClient
         $this->lastName = $lastName;
         return $this;
     }
+
+    /**
+     * @return string
+     */
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * @param string $email
+     * @return WhmcsClient
+     */
+    public function setEmail(string $email): WhmcsClient
+    {
+        $this->email = $email;
+        return $this;
+    }
 }
