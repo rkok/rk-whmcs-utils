@@ -26,11 +26,26 @@ function formatAmount($amount) {
 $_accountsReceivable = [];
 $_commissionExpenses = [];
 
-// TODO: something to filter out meta-invoices (invoice lines refer to other inv.s)
 
 foreach ($repo->getTransactionList() as $i => $transaction) {
     $invoice = $transaction->getInvoice();
-    if ($invoice->getStatus() !== 'Paid') {
+    if ($invoice->getStatus() !== 'Paid' || count($invoice->getItems()) === 0) {
+        continue;
+    }
+
+    $totalExCredit = $invoice->getSubTotal() + $invoice->getTax();
+    if ($totalExCredit === 0.0) {
+        continue;
+    }
+
+    // Filter out "meta-invoices" that only contain references to other invoices
+    // This happens when a client pays multiple invoices at once.
+    // We don't need these, as we generate lines for the sub-invoices already,
+    // which are more detailed (= better).
+    $isMetaInvoice = Util::arrayEvery($invoice->getItems(), function(WhmcsInvoiceItem $item) {
+        return $item->getType() === 'Invoice';
+    });
+    if ($isMetaInvoice) {
         continue;
     }
 
