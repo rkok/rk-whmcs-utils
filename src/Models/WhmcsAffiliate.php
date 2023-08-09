@@ -33,6 +33,11 @@ class WhmcsAffiliate
         return $this->getCompanyName();
     }
 
+    public function getFullNameFormatted()
+    {
+        return trim(ucfirst($this->getFirstName()) . ' ' . ucfirst($this->getLastName()));
+    }
+
     /**
      * @return int
      */

@@ -8,14 +8,16 @@ class WhmcsClient
     protected ?string $companyName;
     protected string $firstName;
     protected string $lastName;
+    protected string $email;
 
     public static function fromDbRow(array $row)
     {
         return (new self())
             ->setId($row['id'])
-            ->setCompanyName($row['companyname'] ?: null)
-            ->setFirstName($row['firstname'])
-            ->setLastName($row['lastname']);
+            ->setCompanyName(htmlspecialchars_decode($row['companyname'] ?: ''))
+            ->setFirstName(htmlspecialchars_decode($row['firstname']))
+            ->setLastName(htmlspecialchars_decode($row['lastname']))
+            ->setEmail($row['email']);
     }
 
     public function generateClientViewUrlPath(): string
@@ -28,9 +30,14 @@ class WhmcsClient
         if ($this->getCompanyName()) {
             $name = trim($this->getCompanyName());
         } else {
-            $name = trim($this->getFirstName() . ' ' . $this->getLastName());
+            $name = $this->getFullNameFormatted();
         }
-        return "$name ({$this->id})";
+        return "$name (ID $this->id)";
+    }
+
+    public function getFullNameFormatted()
+    {
+        return trim(ucfirst($this->getFirstName()) . ' ' . ucfirst($this->getLastName()));
     }
 
     /**

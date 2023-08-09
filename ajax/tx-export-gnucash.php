@@ -3,6 +3,8 @@
 namespace RKWhmcsUtils;
 
 use Ramsey\Uuid\Uuid;
+use RKWhmcsUtils\Models\GnucashTransactionLine;
+use RKWhmcsUtils\Models\WhmcsInvoiceItem;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
@@ -18,16 +20,16 @@ function makeCsv($rows)
     return ob_get_clean();
 }
 
-function formatAmount($amount) {
-    return number_format($amount, 2, ',', '');
+function exitWithError($message, $code = 500) {
+    http_response_code($code);
+    header('content-type: application/json');
+    echo json_encode(['error' => $message]);
+    exit();
 }
 
-// Debit accounts that we generate CSV rows for
-$_accountsReceivable = [];
-$_commissionExpenses = [];
+$transactions = [];
 
-
-foreach ($repo->getTransactionList() as $i => $transaction) {
+foreach ($repo->getTransactionList() as $transaction) {
     $invoice = $transaction->getInvoice();
     if ($invoice->getStatus() !== 'Paid' || count($invoice->getItems()) === 0) {
         continue;
@@ -56,7 +58,7 @@ foreach ($repo->getTransactionList() as $i => $transaction) {
     $txUuid = (Uuid::uuid4())->toString();
 
     // Main row (accounts receivable side)
-    $description = "{$invoice->getId()} - {$client->getDisplayName()}";
+    $description = "{$invoice->getId()} - {$client->getFullNameFormatted()}";
     if ($companyName = $client->getCompanyName()) {
         $description .= " - $companyName";
     }
@@ -64,34 +66,14 @@ foreach ($repo->getTransactionList() as $i => $transaction) {
         $description .= " (Aff. {$affiliate->getDisplayName()})";
     }
 
-    $totalExCredit = $invoice->getSubTotal() + $invoice->getTax();
-
-    if ($totalExCredit === 0.0) {
-        continue;
-    }
-
-    $_accountsReceivable[] = [
-        $date,
-        $txUuid,
-        '',
-        $description,
-        '',
-        '', // Commodity/Currency (TODO)
-        '', // Void Reason,
-        '', // Action
-        '', // Memo
-        // Full Account Name
-        // Use invoiceitems.type (Hosting/DomainRegister/...) as placeholder
-        "Accounts Receivable",
-        '', // Account Name (unused)
-        '', // Amount With Sym
-        formatAmount($totalExCredit), // Amount Num.
-        '', // Value With Sym
-        formatAmount($totalExCredit), // Value Num.
-        'c', // Reconciled (n = new, c = cleared)
-        '', // Reconcile Date
-        1, // Rate/Price
-    ];
+    $transactions[] = (new GnucashTransactionLine())
+        ->setDate($date)
+        ->setId($txUuid)
+        ->setDescription($description)
+        ->setMemo($client->getEmail())
+        ->setFullAccountName("Accounts Receivable")
+        ->setAmount($totalExCredit)
+        ->toArray();
 
     // Sub-rows - income sides
     foreach ($invoice->getItems() as $item) {
@@ -99,58 +81,74 @@ foreach ($repo->getTransactionList() as $i => $transaction) {
             continue;
         }
 
-        $_accountsReceivable[] = [
-            $date,
-            $txUuid,
-            '',
-            $description,
-            $item->getNotes(),
-            '', // Commodity/Currency (TODO)
-            '', // Void Reason,
-            '', // Action
-            implode(" - ", explode("\n", $item->getDescription())), // Memo
-            // Full Account Name
+        $transactions[] = (new GnucashTransactionLine())
+            ->setDate($date)
+            ->setId($txUuid)
+            ->setDescription($description)
+            ->setNotes($item->getNotes())
+            ->setMemo(implode(" - ", explode("\n", $item->getDescription())))
             // Use invoiceitems.type (Hosting/DomainRegister/...) as placeholder
-            $item->getType(),
-            '', // Account Name (unused)
-            '', // Amount With Sym
-            formatAmount(-$item->getAmount()), // Amount Num.
-            '', // Value With Sym
-            formatAmount(-$item->getAmount()), // Value Num.
-            'n', // Reconciled (n = new, c = cleared)
-            '', // Reconcile Date
-            1, // Rate/Price
-        ];
+            ->setFullAccountName($item->getType())
+            ->setAmount(-$item->getAmount())
+            ->toArray();
     }
 
     // Sub-row for tax
     if (($tax = $invoice->getTax()) > 0) {
-        $_accountsReceivable[] = [
-            $date,
-            $txUuid,
-            '',
-            $description,
-            '',
-            '', // Commodity/Currency (TODO)
-            '', // Void Reason,
-            '', // Action
-            "{$invoice->getTaxRate()}% Tax", // Memo
-            // Full Account Name
-            // Use invoiceitems.type (Hosting/DomainRegister/...) as placeholder
-            "Tax",
-            '', // Account Name (unused)
-            '', // Amount With Sym
-            formatAmount(-$tax), // Amount Num.
-            '', // Value With Sym
-            formatAmount(-$tax), // Value Num.
-            'n', // Reconciled (n = new, c = cleared)
-            '', // Reconcile Date
-            1, // Rate/Price
-        ];
+        $transactions[] = (new GnucashTransactionLine())
+            ->setDate($date)
+            ->setId($txUuid)
+            ->setDescription($description)
+            ->setMemo("{$invoice->getTaxRate()}% Tax")
+            ->setFullAccountName('Tax')
+            ->setAmount(-$tax)
+            ->toArray();
     }
 
-    // TODO: Credit deduction
-    // TODO: Affiliate commission
+    if (($credit = $invoice->getCredit()) > 0) {
+        $creditUuid = (Uuid::uuid4())->toString();
+
+        $transactions[] = (new GnucashTransactionLine())
+            ->setDate($date)
+            ->setId($creditUuid)
+            ->setDescription("Credit payment - $description")
+            ->setFullAccountName("Accounts Receivable")
+            ->setAmount(-$credit)
+            ->toArray();
+        $transactions[] = (new GnucashTransactionLine())
+            ->setDate($date)
+            ->setId($creditUuid)
+            ->setDescription("Credit payment - $description")
+            ->setFullAccountName("Credit Payable - {$client->getFullNameFormatted()}")
+            ->setAmount($credit)
+            ->toArray();
+    }
+
+    try {
+        $commission = $transaction->calculateAffiliateCommission();
+    } catch(\Exception $e) {
+        exitWithError("Invoice {$invoice->getId()}: " . $e->getMessage());
+    }
+
+    if ($affiliate && !empty($commission) && $commission > 0) {
+        $commissionUuid = (Uuid::uuid4())->toString();
+        $commissionDescription = "Commission - $description";
+
+        $transactions[] = (new GnucashTransactionLine())
+            ->setDate($date)
+            ->setId($commissionUuid)
+            ->setDescription($commissionDescription)
+            ->setFullAccountName("Sales Commissions")
+            ->setAmount(-$commission)
+            ->toArray();
+        $transactions[] = (new GnucashTransactionLine())
+            ->setDate($date)
+            ->setId($commissionUuid)
+            ->setDescription($commissionDescription)
+            ->setFullAccountName("Commissions Payable - {$affiliate->getFullNameFormatted()}")
+            ->setAmount($commission)
+            ->toArray();
+    }
 }
 
 $columns = [
@@ -174,7 +172,7 @@ $columns = [
     'Rate/Price'
 ];
 
-$csv = makeCsv([$columns, ...$_accountsReceivable]);
+$csv = makeCsv([$columns, ...$transactions]);
 
 $exportName = "whmcs-txns-" . date('Ymd-His') . '.csv';
 
