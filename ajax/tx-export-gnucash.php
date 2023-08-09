@@ -27,11 +27,24 @@ function exitWithError($message, $code = 500) {
     exit();
 }
 
+$datePaidFrom = new \DateTime('1970-01-01');
+try {
+    if (preg_match("/^\d{4}-\d{2}-\d{2}$/", @$_GET['datePaidFrom'])) {
+        $datePaidFrom = new \DateTime($_GET['datePaidFrom']);
+    }
+} catch(\Exception $e) {
+    exitWithError("Invalid datePaidFrom", 400);
+}
+
 $transactions = [];
 
 foreach ($repo->getTransactionList() as $transaction) {
     $invoice = $transaction->getInvoice();
-    if ($invoice->getStatus() !== 'Paid' || count($invoice->getItems()) === 0) {
+    if (
+        $invoice->getStatus() !== 'Paid'
+        || count($invoice->getItems()) === 0
+        || $invoice->getDatePaid() < $datePaidFrom
+    ) {
         continue;
     }
 
