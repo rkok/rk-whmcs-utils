@@ -160,14 +160,14 @@ foreach ($repo->getTransactionList() as $transaction) {
             ->setId($commissionUuid)
             ->setDescription($commissionDescription)
             ->setFullAccountName("Sales Commissions")
-            ->setAmount(-$commission)
+            ->setAmount($commission)
             ->toArray();
         $transactions[] = (new GnucashTransactionLine())
             ->setDate($date)
             ->setId($commissionUuid)
             ->setDescription($commissionDescription)
             ->setFullAccountName("Commissions Payable - {$affiliate->getFullNameFormatted()}")
-            ->setAmount($commission)
+            ->setAmount(-$commission)
             ->toArray();
     }
 }
