@@ -94,6 +94,14 @@ foreach ($repo->getTransactionList() as $transaction) {
             continue;
         }
 
+        $amount = $item->getAmount();
+        if ($invoice->isVatInclusive()) {
+            // For vat-inclusive invoices:
+            // Subtract VAT evenly from all invoice rows,
+            // so the total with VAT adds up correctly
+            $amount = $amount / (1 + ($invoice->getTaxRate() / 100));
+        }
+
         $transactions[] = (new GnucashTransactionLine())
             ->setDate($date)
             ->setId($txUuid)
@@ -102,7 +110,7 @@ foreach ($repo->getTransactionList() as $transaction) {
             ->setMemo(implode(" - ", explode("\n", $item->getDescription())))
             // Use invoiceitems.type (Hosting/DomainRegister/...) as placeholder
             ->setFullAccountName($item->getType())
-            ->setAmount(-$item->getAmount())
+            ->setAmount(-$amount)
             ->toArray();
     }
 

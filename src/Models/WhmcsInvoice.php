@@ -48,6 +48,23 @@ class WhmcsInvoice
         return "dl.php?type=i&id={$this->getId()}&language=english";
     }
 
+    public function isVatInclusive(): bool
+    {
+        if (!($tax = $this->getTax())) {
+            return false;
+        }
+        // This seems the only way to detect invoices where
+        // VAT was applied inclusively
+        $itemsTotal = 0;
+        foreach($this->getItems() as $item) {
+            $itemsTotal = round($itemsTotal + $item->getAmount(), 2);
+        }
+        if ($itemsTotal === $this->getSubTotal() + $tax) {
+            return true;
+        }
+        return false;
+    }
+
     public function isPaid(): bool
     {
         return $this->getStatus() === 'Paid';
