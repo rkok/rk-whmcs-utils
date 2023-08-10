@@ -4,6 +4,7 @@ namespace RKWhmcsUtils;
 
 use PDO;
 use RKWhmcsUtils\Models\WhmcsAffiliate;
+use RKWhmcsUtils\Models\WhmcsAffiliateWithdrawal;
 use RKWhmcsUtils\Models\WhmcsClient;
 use RKWhmcsUtils\Models\WhmcsCommissionEntry;
 use RKWhmcsUtils\Models\WhmcsInvoice;
@@ -48,6 +49,43 @@ class WhmcsDb
             $return[$row['id']] = WhmcsAffiliate::fromDbRow($row);
         }
         return $return;
+    }
+
+    /**
+     * @return WhmcsAffiliateWithdrawal[]
+     */
+    public function getAffiliateWithdrawals(): array {
+
+        $results = $this->pdo->query('
+            SELECT aw.id, aw.affiliateid, aw.`date`, aw.amount,
+                IF(cr.id IS NULL, "cash", "credit") AS withdrawal_type,
+                cr.id AS credit_id, cr.description AS credit_description,
+                cr.amount AS credit_amount
+            FROM tblaffiliateswithdrawals aw
+            JOIN tblaffiliates a ON aw.affiliateid  = a.id
+            LEFT JOIN tblcredit cr ON 
+                cr.clientid = a.clientid 
+                AND cr.date = aw.date 
+                AND cr.amount = aw.amount
+            GROUP BY aw.id;
+        ')->fetchAll();
+        $return = [];
+        foreach ($results as $row) {
+            $return[] = WhmcsAffiliateWithdrawal::fromDbRow($row);
+        }
+        return $return;
+/*
+ * SELECT aw.affiliateid, aw.id, aw.affiliateid, aw.`date`, aw.amount,
+	IF(cr.id IS NULL, "cash", "credit") as withdrawal_type,
+	cr.id as credit_id, cr.description, cr.amount
+FROM tblaffiliateswithdrawals aw
+join tblaffiliates a on aw.affiliateid  = a.id
+left join tblcredit cr on
+	cr.clientid = a.clientid
+	and cr.date = aw.date
+	and cr.amount = aw.amount
+group by aw.id;
+ */
     }
 
     public function getClientAffiliateIds()

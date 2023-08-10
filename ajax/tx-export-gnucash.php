@@ -131,10 +131,6 @@ foreach ($repo->getTransactionList() as $transaction) {
     }
 }
 
-// TODO: affiliate commission payouts to cash
-// TODO: affiliate commission payouts to credit
-// TODO: credit in/out
-
 $csv = Util::makeCsv([GnucashTransactionLine::GNUCASH_CSV_COLS, ...$results]);
 
 $exportName = "whmcs-txns-" . date('Ymd-His') . '.csv';
