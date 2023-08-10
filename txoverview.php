@@ -28,7 +28,7 @@ include(__DIR__ . '/inc/00-head.php');
 <p>
     <a href="ajax/tx-export.php">Export XLSX</a><br />
     <a href="ajax/tx-export-gnucash.php">Export Gnucash CSV (invoices, income, credit deductions)</a><br />
-    <a href="ajax/tx-export-gnucash-commissions.php">Export Gnucash CSV (commissions)</a>
+    <a href="ajax/tx-export-gnucash-commcred.php">Export Gnucash CSV (commissions, credit deposits)</a>
 </p>
 <table>
     <thead>

@@ -141,7 +141,44 @@ foreach($withdrawals as $withdrawal) {
         ->toArray();
 }
 
-// TODO: credit in/out
+// Credit deposits (non-affiliate-related)
+// (NOT withdrawals - those are already included in the main export of invoices etc.)
+$topups = $db->getCreditTransactions();
+
+$clients = $db->getClients();
+
+foreach($topups as $topup) {
+    if ($topup->getDate() < $dateFrom || $topup->getAmount() <= 0) {
+        continue;
+    } elseif (strpos($topup->getDescription(), 'Mass Invoice Payment Credit') === 0) {
+        // A hack to work around one of WHMCS's own
+        continue;
+    }
+
+    if (!isset($clients[$topup->getClientId()])) {
+        Util::exitWithJsonError("Can't find client for credit top-up {$topup->getId()}");
+    }
+    $client = $clients[$topup->getClientId()];
+
+    $date = $topup->getDate()->format('Y-m-d');
+    $uuid = (Uuid::uuid4())->toString();
+    $description = "Customer credit deposit - {$client->getFullNameFormatted()} - {$topup->getDescription()}";
+
+    $results[] = (new GnucashTransactionLine())
+        ->setDate($date)
+        ->setId($uuid)
+        ->setDescription($description)
+        ->setFullAccountName("Refunds")
+        ->setAmount($topup->getAmount())
+        ->toArray();
+    $results[] = (new GnucashTransactionLine())
+        ->setDate($date)
+        ->setId($uuid)
+        ->setDescription($description)
+        ->setFullAccountName("Credit Payable - {$client->getFullNameFormatted()}")
+        ->setAmount(-$topup->getAmount())
+        ->toArray();
+}
 
 $csv = Util::makeCsv([GnucashTransactionLine::GNUCASH_CSV_COLS, ...$results]);
 

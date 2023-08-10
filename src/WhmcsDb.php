@@ -7,6 +7,7 @@ use RKWhmcsUtils\Models\WhmcsAffiliate;
 use RKWhmcsUtils\Models\WhmcsAffiliateWithdrawal;
 use RKWhmcsUtils\Models\WhmcsClient;
 use RKWhmcsUtils\Models\WhmcsCommissionEntry;
+use RKWhmcsUtils\Models\WhmcsCreditTransaction;
 use RKWhmcsUtils\Models\WhmcsInvoice;
 use RKWhmcsUtils\Models\WhmcsInvoiceItem;
 
@@ -54,8 +55,8 @@ class WhmcsDb
     /**
      * @return WhmcsAffiliateWithdrawal[]
      */
-    public function getAffiliateWithdrawals(): array {
-
+    public function getAffiliateWithdrawals(): array
+    {
         $results = $this->pdo->query('
             SELECT aw.id, aw.affiliateid, aw.`date`, aw.amount,
                 IF(cr.id IS NULL, "cash", "credit") AS withdrawal_type,
@@ -74,18 +75,26 @@ class WhmcsDb
             $return[] = WhmcsAffiliateWithdrawal::fromDbRow($row);
         }
         return $return;
-/*
- * SELECT aw.affiliateid, aw.id, aw.affiliateid, aw.`date`, aw.amount,
-	IF(cr.id IS NULL, "cash", "credit") as withdrawal_type,
-	cr.id as credit_id, cr.description, cr.amount
-FROM tblaffiliateswithdrawals aw
-join tblaffiliates a on aw.affiliateid  = a.id
-left join tblcredit cr on
-	cr.clientid = a.clientid
-	and cr.date = aw.date
-	and cr.amount = aw.amount
-group by aw.id;
- */
+    }
+
+    /**
+     * @param $includeAffiliateCommissions
+     * @return WhmcsCreditTransaction[]
+     */
+    public function getCreditTransactions($includeAffiliateCommissions = false)
+    {
+        // TODO: use a less hacky way of doing this (with joins like getAffiliateWithdrawals)
+        $where = $includeAffiliateCommissions ? '' : 'WHERE description != "Affiliate Commissions Withdrawal"';
+        $results = $this->pdo->query("
+            SELECT id, clientid, admin_id, `date`, description, amount, relid
+            FROM tblcredit
+            $where;
+        ")->fetchAll();
+        $return = [];
+        foreach ($results as $row) {
+            $return[] = WhmcsCreditTransaction::fromDbRow($row);
+        }
+        return $return;
     }
 
     public function getClientAffiliateIds()
