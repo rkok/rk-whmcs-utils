@@ -24,7 +24,7 @@ class WhmcsRepository
         $invoices = $this->db->getInvoices();
         $invoiceItems = $this->db->getInvoiceItemsByInvoiceId();
         $clients = $this->db->getClients();
-        $affiliates = $this->db->getAffiliates();
+        $affiliates = $this->db->getAffiliatesIndexedById();
         $clientAffiliateIds = $this->db->getClientAffiliateIds();
 
         $transactions = [];

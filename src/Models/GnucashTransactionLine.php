@@ -4,6 +4,27 @@ namespace RKWhmcsUtils\Models;
 
 class GnucashTransactionLine
 {
+    const GNUCASH_CSV_COLS = [
+        'Date',
+        'Transaction ID',
+        'Number',
+        'Description',
+        'Notes',
+        'Commodity/Currency',
+        'Void Reason',
+        'Action',
+        'Memo',
+        'Full Account Name',
+        'Account Name',
+        'Amount With Sym',
+        'Amount Num.',
+        'Value With Sym',
+        'Value Num.',
+        'Reconcile',
+        'Reconcile Date',
+        'Rate/Price'
+    ];
+
     protected string $date;
     protected string $id;
     protected string $description;

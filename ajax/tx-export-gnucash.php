@@ -8,24 +8,9 @@ use RKWhmcsUtils\Models\WhmcsInvoiceItem;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
 
-$repo = new WhmcsRepository(WhmcsDb::buildInstance());
+$db = WhmcsDb::buildInstance();
 
-function makeCsv($rows)
-{
-    $fh = fopen('php://output', 'w');
-    ob_start();
-    foreach ($rows as $row) {
-        fputcsv($fh, $row);
-    }
-    return ob_get_clean();
-}
-
-function exitWithError($message, $code = 500) {
-    http_response_code($code);
-    header('content-type: application/json');
-    echo json_encode(['error' => $message]);
-    exit();
-}
+$repo = new WhmcsRepository($db);
 
 $datePaidFrom = new \DateTime('1970-01-01');
 try {
@@ -33,10 +18,10 @@ try {
         $datePaidFrom = new \DateTime($_GET['datePaidFrom']);
     }
 } catch(\Exception $e) {
-    exitWithError("Invalid datePaidFrom", 400);
+    Util::exitWithJsonError("Invalid datePaidFrom", 400);
 }
 
-$transactions = [];
+$results = [];
 
 foreach ($repo->getTransactionList() as $transaction) {
     $invoice = $transaction->getInvoice();
@@ -79,7 +64,7 @@ foreach ($repo->getTransactionList() as $transaction) {
         $description .= " (Aff. {$affiliate->getDisplayName()})";
     }
 
-    $transactions[] = (new GnucashTransactionLine())
+    $results[] = (new GnucashTransactionLine())
         ->setDate($date)
         ->setId($txUuid)
         ->setDescription($description)
@@ -102,7 +87,7 @@ foreach ($repo->getTransactionList() as $transaction) {
             $amount = $amount / (1 + ($invoice->getTaxRate() / 100));
         }
 
-        $transactions[] = (new GnucashTransactionLine())
+        $results[] = (new GnucashTransactionLine())
             ->setDate($date)
             ->setId($txUuid)
             ->setDescription($description)
@@ -116,7 +101,7 @@ foreach ($repo->getTransactionList() as $transaction) {
 
     // Sub-row for tax
     if (($tax = $invoice->getTax()) > 0) {
-        $transactions[] = (new GnucashTransactionLine())
+        $results[] = (new GnucashTransactionLine())
             ->setDate($date)
             ->setId($txUuid)
             ->setDescription($description)
@@ -129,14 +114,14 @@ foreach ($repo->getTransactionList() as $transaction) {
     if (($credit = $invoice->getCredit()) > 0) {
         $creditUuid = (Uuid::uuid4())->toString();
 
-        $transactions[] = (new GnucashTransactionLine())
+        $results[] = (new GnucashTransactionLine())
             ->setDate($date)
             ->setId($creditUuid)
             ->setDescription("Credit payment - $description")
             ->setFullAccountName("Accounts Receivable")
             ->setAmount(-$credit)
             ->toArray();
-        $transactions[] = (new GnucashTransactionLine())
+        $results[] = (new GnucashTransactionLine())
             ->setDate($date)
             ->setId($creditUuid)
             ->setDescription("Credit payment - $description")
@@ -144,56 +129,13 @@ foreach ($repo->getTransactionList() as $transaction) {
             ->setAmount($credit)
             ->toArray();
     }
-
-    try {
-        $commission = $transaction->calculateAffiliateCommission();
-    } catch(\Exception $e) {
-        exitWithError("Invoice {$invoice->getId()}: " . $e->getMessage());
-    }
-
-    if ($affiliate && !empty($commission) && $commission > 0) {
-        $commissionUuid = (Uuid::uuid4())->toString();
-        $commissionDescription = "Commission - $description";
-
-        $transactions[] = (new GnucashTransactionLine())
-            ->setDate($date)
-            ->setId($commissionUuid)
-            ->setDescription($commissionDescription)
-            ->setFullAccountName("Sales Commissions")
-            ->setAmount($commission)
-            ->toArray();
-        $transactions[] = (new GnucashTransactionLine())
-            ->setDate($date)
-            ->setId($commissionUuid)
-            ->setDescription($commissionDescription)
-            ->setFullAccountName("Commissions Payable - {$affiliate->getFullNameFormatted()}")
-            ->setAmount(-$commission)
-            ->toArray();
-    }
 }
 
-$columns = [
-    'Date',
-    'Transaction ID',
-    'Number',
-    'Description',
-    'Notes',
-    'Commodity/Currency',
-    'Void Reason',
-    'Action',
-    'Memo',
-    'Full Account Name',
-    'Account Name',
-    'Amount With Sym',
-    'Amount Num.',
-    'Value With Sym',
-    'Value Num.',
-    'Reconcile',
-    'Reconcile Date',
-    'Rate/Price'
-];
+// TODO: affiliate commission payouts to cash
+// TODO: affiliate commission payouts to credit
+// TODO: credit in/out
 
-$csv = makeCsv([$columns, ...$transactions]);
+$csv = Util::makeCsv([GnucashTransactionLine::GNUCASH_CSV_COLS, ...$results]);
 
 $exportName = "whmcs-txns-" . date('Ymd-His') . '.csv';
 

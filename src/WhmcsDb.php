@@ -5,6 +5,7 @@ namespace RKWhmcsUtils;
 use PDO;
 use RKWhmcsUtils\Models\WhmcsAffiliate;
 use RKWhmcsUtils\Models\WhmcsClient;
+use RKWhmcsUtils\Models\WhmcsCommissionEntry;
 use RKWhmcsUtils\Models\WhmcsInvoice;
 use RKWhmcsUtils\Models\WhmcsInvoiceItem;
 
@@ -33,7 +34,7 @@ class WhmcsDb
     /**
      * @return WhmcsAffiliate[]
      */
-    public function getAffiliates(): array
+    public function getAffiliatesIndexedById(): array
     {
         $results = $this->pdo->query("
             select a.id, a.clientid, uc.auth_user_id userid, c.firstname, c.lastname, c.companyname, c.email, a.paytype, a.payamount
@@ -135,6 +136,21 @@ class WhmcsDb
     }
 
     /**
+     * @return WhmcsCommissionEntry[]
+     * @throws \Exception
+     */
+    public function getCommissionEntriesByAffiliateId(): array
+    {
+        $results = $this->pdo->query("
+            select id, affiliateid, `date`, affaccid, invoice_id, description, amount, created_at, updated_at 
+            from tblaffiliateshistory
+        ")->fetchAll();
+        return array_map(function ($row) {
+            return WhmcsCommissionEntry::fromDbRow($row);
+        }, $results);
+    }
+
+    /**
      * Ordered by ID desc (latest invoice first)
      * @return WhmcsInvoice[]
      */
@@ -165,7 +181,7 @@ class WhmcsDb
             from tblinvoiceitems i
         ")->fetchAll(PDO::FETCH_GROUP);
         $return = [];
-        foreach($results as $invoiceId => $itemRows) {
+        foreach ($results as $invoiceId => $itemRows) {
             $return[$invoiceId] = array_map(function ($itemRow) {
                 return WhmcsInvoiceItem::fromDbRow($itemRow);
             }, $itemRows);

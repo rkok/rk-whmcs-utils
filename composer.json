@@ -10,6 +10,7 @@
         "ext-pdo": "*",
         "ext-curl": "*",
         "phpoffice/phpspreadsheet": "^1.28",
-        "ramsey/uuid": "^4.7"
+        "ramsey/uuid": "^4.7",
+        "ext-json": "*"
     }
 }
