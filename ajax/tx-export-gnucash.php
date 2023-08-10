@@ -4,6 +4,7 @@ namespace RKWhmcsUtils;
 
 use Ramsey\Uuid\Uuid;
 use RKWhmcsUtils\Models\GnucashTransactionLine;
+use RKWhmcsUtils\Models\WhmcsInvoice;
 use RKWhmcsUtils\Models\WhmcsInvoiceItem;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
@@ -19,6 +20,32 @@ try {
     }
 } catch(\Exception $e) {
     Util::exitWithJsonError("Invalid datePaidFrom", 400);
+}
+
+$massPaidInvoiceIds = [];
+
+// First, detect Mass Invoice Payments, which occur when
+// clients pay multiple invoices at once.
+// WHMCS uses a bit of a hack to resolve these: it processes the payment
+// on a separate "Mass Invoice", and creates credit transactions to
+// pay the sub-invoices with.
+// This makes our life a bit more difficult.
+foreach ($repo->getTransactionList() as $transaction) {
+    $invoice = $transaction->getInvoice();
+    if ($invoice->getStatus() !== 'Paid' || !$invoice->isMassPaymentInvoice()) {
+        continue;
+    }
+    if ($invoice->getCredit() !== 0.0) {
+        Util::exitWithJsonError("[BUG] Invoice {$invoice->getId()}: Mass Invoice paid with full or partial credit not supported");
+    }
+    foreach($invoice->getItems() as $item) {
+        $massPaidInvoiceIds[] = (int)str_replace(
+            // Pray they never change this label ....
+            'Invoice #',
+            '',
+            $item->getDescription()
+        );
+    }
 }
 
 $results = [];
@@ -38,14 +65,11 @@ foreach ($repo->getTransactionList() as $transaction) {
         continue;
     }
 
-    // Filter out "meta-invoices" that only contain references to other invoices
+    // Filter out Mass Invoice Payments that only contain references to other invoices
     // This happens when a client pays multiple invoices at once.
     // We don't need these, as we generate lines for the sub-invoices already,
     // which are more detailed (= better).
-    $isMetaInvoice = Util::arrayEvery($invoice->getItems(), function(WhmcsInvoiceItem $item) {
-        return $item->getType() === 'Invoice';
-    });
-    if ($isMetaInvoice) {
+    if ($invoice->isMassPaymentInvoice()) {
         continue;
     }
 
@@ -111,7 +135,11 @@ foreach ($repo->getTransactionList() as $transaction) {
             ->toArray();
     }
 
-    if (($credit = $invoice->getCredit()) > 0) {
+    if (
+        // Ignore "credit" from Mass Invoice (see above)
+        !in_array($invoice->getId(), $massPaidInvoiceIds)
+        && ($credit = $invoice->getCredit()) > 0
+    ) {
         $creditUuid = (Uuid::uuid4())->toString();
 
         $results[] = (new GnucashTransactionLine())

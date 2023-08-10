@@ -2,6 +2,8 @@
 
 namespace RKWhmcsUtils\Models;
 
+use RKWhmcsUtils\Util;
+
 class WhmcsInvoice
 {
     protected int $id;
@@ -36,6 +38,12 @@ class WhmcsInvoice
             ->setTotal((float)$row['total'])
             ->setStatus($row['status'])
             ->setPaymentMethod($row['paymentmethod']);
+    }
+
+    public function isMassPaymentInvoice(): bool {
+        return Util::arrayEvery($this->getItems(), function(WhmcsInvoiceItem $item) {
+            return $item->getType() === 'Invoice';
+        });
     }
 
     public function generateInvoiceEditUrlPath(): string
