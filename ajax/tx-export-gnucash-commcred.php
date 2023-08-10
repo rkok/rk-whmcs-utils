@@ -4,8 +4,6 @@ namespace RKWhmcsUtils;
 
 use Ramsey\Uuid\Uuid;
 use RKWhmcsUtils\Models\GnucashTransactionLine;
-use RKWhmcsUtils\Models\WhmcsCommissionEntry;
-use RKWhmcsUtils\Models\WhmcsInvoiceItem;
 use RKWhmcsUtils\Models\WhmcsTransaction;
 
 require_once(__DIR__ . '/../vendor/autoload.php');
