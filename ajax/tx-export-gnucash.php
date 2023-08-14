@@ -30,7 +30,10 @@ $massPaidInvoiceIds = [];
 // This makes our life a bit more difficult.
 foreach ($repo->getTransactionList() as $transaction) {
     $invoice = $transaction->getInvoice();
-    if ($invoice->getStatus() !== 'Paid' || !$invoice->isMassPaymentInvoice()) {
+    if (
+        !in_array($invoice->getStatus(), ['Paid', 'Refunded'])
+        || !$invoice->isMassPaymentInvoice()
+    ) {
         continue;
     }
     if ($invoice->getCredit() !== 0.0) {
@@ -51,7 +54,7 @@ $results = [];
 foreach ($repo->getTransactionList() as $transaction) {
     $invoice = $transaction->getInvoice();
     if (
-        $invoice->getStatus() !== 'Paid'
+        !in_array($invoice->getStatus(), ['Paid', 'Refunded'])
         || count($invoice->getItems()) === 0
         || $invoice->getDatePaid() < $datePaidFrom
     ) {
