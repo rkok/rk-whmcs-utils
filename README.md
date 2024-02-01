@@ -10,6 +10,8 @@ A quick slap-together of views I needed to make sense of a WHMCS instance:
 
 - **Transactions Overview**: transactions by invoice. Useful for bookkeeping.
 
+- **Transaction Export**: CSV exports for use with GnuCash
+
 Tested with PHP 8.1 and WHMCS 8.5.
 
 Special Backender® Design.
