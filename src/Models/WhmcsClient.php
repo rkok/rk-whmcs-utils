@@ -9,6 +9,7 @@ class WhmcsClient
     protected string $firstName;
     protected string $lastName;
     protected string $email;
+    protected ?WhmcsCurrency $currency;
 
     public static function fromDbRow(array $row)
     {
@@ -127,6 +128,17 @@ class WhmcsClient
     public function setEmail(string $email): WhmcsClient
     {
         $this->email = $email;
+        return $this;
+    }
+
+    public function getCurrency(): ?WhmcsCurrency
+    {
+        return $this->currency;
+    }
+
+    public function setCurrency(?WhmcsCurrency $currency): WhmcsClient
+    {
+        $this->currency = $currency;
         return $this;
     }
 }

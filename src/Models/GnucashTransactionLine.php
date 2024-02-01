@@ -29,6 +29,7 @@ class GnucashTransactionLine
     protected string $id;
     protected string $description;
     protected string $notes = '';
+    protected string $currencyCode = '';
     protected string $memo = '';
     protected string $fullAccountName;
     protected float $amount;
@@ -41,7 +42,7 @@ class GnucashTransactionLine
             '', // Number
             $this->description,
             $this->notes,
-            '', // Commodity/Currency (TODO)
+            $this->currencyCode, // Commodity/Currency
             '', // Void Reason,
             '', // Action
             $this->memo, // Memo
@@ -130,6 +131,17 @@ class GnucashTransactionLine
     public function setNotes(string $notes): GnucashTransactionLine
     {
         $this->notes = $notes;
+        return $this;
+    }
+
+    public function getCurrencyCode(): string
+    {
+        return $this->currencyCode;
+    }
+
+    public function setCurrencyCode(string $currencyCode): GnucashTransactionLine
+    {
+        $this->currencyCode = $currencyCode;
         return $this;
     }
 

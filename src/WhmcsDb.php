@@ -8,6 +8,7 @@ use RKWhmcsUtils\Models\WhmcsAffiliateWithdrawal;
 use RKWhmcsUtils\Models\WhmcsClient;
 use RKWhmcsUtils\Models\WhmcsCommissionEntry;
 use RKWhmcsUtils\Models\WhmcsCreditTransaction;
+use RKWhmcsUtils\Models\WhmcsCurrency;
 use RKWhmcsUtils\Models\WhmcsInvoice;
 use RKWhmcsUtils\Models\WhmcsInvoiceItem;
 
@@ -167,18 +168,31 @@ class WhmcsDb
     }
 
     /**
-     * @return WhmcsClient[]
+     * @return WhmcsClient[] Indexed by ID
      */
     public function getClients(): array
     {
+        $return = [];
+
+        // (optional) Pre-fetch currencies for convenience
+        $currencies = [];
+        try {
+            $currencies = $this->getCurrencies();
+        } catch(\Exception $e) {}
+
         $results = $this->pdo->query("
             select *
             from tblclients
         ")->fetchAll(PDO::FETCH_UNIQUE);
-        $return = [];
+
         foreach ($results as $clientId => $row) {
-            $return[$clientId] = WhmcsClient::fromDbRow([...$row, 'id' => $clientId]);
+            $client = WhmcsClient::fromDbRow([...$row, 'id' => $clientId]);
+            if (isset($currencies[$row['currency']])) {
+                $client->setCurrency($currencies[$row['currency']]);
+            }
+            $return[$clientId] = $client;
         }
+
         return $return;
     }
 
@@ -195,6 +209,22 @@ class WhmcsDb
         return array_map(function ($row) {
             return WhmcsCommissionEntry::fromDbRow($row);
         }, $results);
+    }
+
+    /**
+     * @return WhmcsCurrency[] Indexed by ID
+     */
+    public function getCurrencies(): array
+    {
+        $results = $this->pdo->query("
+            select id, code
+            from tblcurrencies
+        ")->fetchAll(PDO::FETCH_UNIQUE);
+        $return = [];
+        foreach ($results as $id => $row) {
+            $return[$id] = new WhmcsCurrency($id, $row['code']);
+        }
+        return $return;
     }
 
     /**

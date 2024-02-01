@@ -89,10 +89,16 @@ foreach ($repo->getTransactionList() as $transaction) {
         $description .= " (Aff. {$affiliate->getDisplayName()})";
     }
 
+    $currencyCode = '';
+    if ($currency = $client->getCurrency()) {
+        $currencyCode = $currency->getCode();
+    }
+
     $results[] = (new GnucashTransactionLine())
         ->setDate($date)
         ->setId($txUuid)
         ->setDescription($description)
+        ->setCurrencyCode($currencyCode)
         ->setMemo($client->getEmail())
         ->setFullAccountName("Accounts Receivable")
         ->setAmount($totalExCredit)
@@ -117,6 +123,7 @@ foreach ($repo->getTransactionList() as $transaction) {
             ->setId($txUuid)
             ->setDescription($description)
             ->setNotes($item->getNotes())
+            ->setCurrencyCode($currencyCode)
             ->setMemo(implode(" - ", explode("\n", $item->getDescription())))
             // Use invoiceitems.type (Hosting/DomainRegister/...) as placeholder
             ->setFullAccountName($item->getType())
@@ -130,6 +137,7 @@ foreach ($repo->getTransactionList() as $transaction) {
             ->setDate($date)
             ->setId($txUuid)
             ->setDescription($description)
+            ->setCurrencyCode($currencyCode)
             ->setMemo("{$invoice->getTaxRate()}% Tax")
             ->setFullAccountName('Tax')
             ->setAmount(-$tax)
@@ -147,6 +155,7 @@ foreach ($repo->getTransactionList() as $transaction) {
             ->setDate($date)
             ->setId($creditUuid)
             ->setDescription("Credit payment - $description")
+            ->setCurrencyCode($currencyCode)
             ->setFullAccountName("Accounts Receivable")
             ->setAmount(-$credit)
             ->toArray();
@@ -154,6 +163,7 @@ foreach ($repo->getTransactionList() as $transaction) {
             ->setDate($date)
             ->setId($creditUuid)
             ->setDescription("Credit payment - $description")
+            ->setCurrencyCode($currencyCode)
             ->setFullAccountName("Credit Payable - {$client->getFullNameFormatted()}")
             ->setAmount($credit)
             ->toArray();

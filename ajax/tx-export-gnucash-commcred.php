@@ -67,10 +67,16 @@ foreach ($commissionEntries as $commissionEntry) {
     if ($d = $commissionEntry->getDescription()) {
         $description .= " - $d";
     }
+
+    $currencyCode = '';
+
     if ($transaction) {
         $inv = $transaction->getInvoice();
         $client = $transaction->getClient();
         $description .= " - Invoice #{$inv->getId()} - {$client->getFullNameFormatted()} - {$client->getCompanyName()}";
+        if ($currency = $client->getCurrency()) {
+            $currencyCode = $currency->getCode();
+        }
     } else {
         $description .= " - No matching invoice";
     }
@@ -82,6 +88,7 @@ foreach ($commissionEntries as $commissionEntry) {
         ->setDate($date)
         ->setId($uuid)
         ->setDescription($description)
+        ->setCurrencyCode($currencyCode)
         ->setFullAccountName("Sales Commissions")
         ->setAmount($commissionEntry->getAmount())
         ->toArray();
@@ -89,6 +96,7 @@ foreach ($commissionEntries as $commissionEntry) {
         ->setDate($date)
         ->setId($uuid)
         ->setDescription($description)
+        ->setCurrencyCode($currencyCode)
         ->setFullAccountName("Commissions Payable - {$aff->getFullNameFormatted()}")
         ->setAmount(-$commissionEntry->getAmount())
         ->toArray();
@@ -123,6 +131,7 @@ foreach($withdrawals as $withdrawal) {
         $leftAmount = -$withdrawal->getAmount();
     }
 
+    // TODO: fetch currency from somewhere
     $results[] = (new GnucashTransactionLine())
         ->setDate($date)
         ->setId($uuid)
@@ -162,6 +171,7 @@ foreach($topups as $topup) {
     $uuid = (Uuid::uuid4())->toString();
     $description = "Customer credit deposit - {$client->getFullNameFormatted()} - {$topup->getDescription()}";
 
+    // TODO: fetch currency from somewhere
     $results[] = (new GnucashTransactionLine())
         ->setDate($date)
         ->setId($uuid)
