@@ -18,7 +18,11 @@ $transactions = $repo->getTransactionList();
 
 /** @var WhmcsTransaction[][] $txnIndex */
 $txnIndex = [];
+/** @var WhmcsTransaction[] $txnByInvoiceId */
+$txnByInvoiceId = [];
 foreach ($transactions as $transaction) {
+    $txnByInvoiceId[$transaction->getInvoice()->getId()] = $transaction;
+
     if (!($aff = $transaction->getAffiliate())) {
         continue;
     }
@@ -48,18 +52,27 @@ foreach ($commissionEntries as $commissionEntry) {
     }
 
     $affId = $commissionEntry->getAffiliateId();
-    if (!isset($txnIndex[$affId])) {
-        Util::exitWithJsonError("Couldn't find any transactions for affiliate $affId");
-    } else if (!($aff = $affiliates[$affId])) {
+    if (!($aff = $affiliates[$affId] ?? null)) {
         Util::exitWithJsonError("Couldn't find affiliate with ID $affId");
     }
 
-    // Find transaction matching this commission entry
+    // Newer WHMCS versions store the exact invoice ID with the commission history entry.
+    // Prefer that reliable link; fall back to the older inferred affiliate transaction match below.
     $transaction = null;
-    foreach ($txnIndex[$affId] as $txn) {
-        if ($commissionEntry->matchesTransaction($txn)) {
-            $transaction = $txn;
-            break;
+    if (($invoiceId = $commissionEntry->getInvoiceId()) && isset($txnByInvoiceId[$invoiceId])) {
+        $transaction = $txnByInvoiceId[$invoiceId];
+    }
+
+    if (!$transaction) {
+        if (!isset($txnIndex[$affId])) {
+            Util::exitWithJsonError("Couldn't find any transactions for affiliate $affId");
+        }
+
+        foreach ($txnIndex[$affId] as $txn) {
+            if ($commissionEntry->matchesTransaction($txn)) {
+                $transaction = $txn;
+                break;
+            }
         }
     }
 

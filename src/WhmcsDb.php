@@ -202,13 +202,24 @@ class WhmcsDb
      */
     public function getCommissionEntriesByAffiliateId(): array
     {
+        $invoiceIdSelect = $this->tableHasColumn('tblaffiliateshistory', 'invoice_id')
+            ? 'invoice_id'
+            : '0 AS invoice_id';
+
         $results = $this->pdo->query("
-            select id, affiliateid, `date`, affaccid, invoice_id, description, amount, created_at, updated_at 
+            select id, affiliateid, `date`, affaccid, $invoiceIdSelect, description, amount
             from tblaffiliateshistory
         ")->fetchAll();
         return array_map(function ($row) {
             return WhmcsCommissionEntry::fromDbRow($row);
         }, $results);
+    }
+
+    private function tableHasColumn(string $tableName, string $columnName): bool
+    {
+        $stmt = $this->pdo->prepare("SHOW COLUMNS FROM `$tableName` LIKE :columnName");
+        $stmt->execute(['columnName' => $columnName]);
+        return (bool)$stmt->fetch();
     }
 
     /**

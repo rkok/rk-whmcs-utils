@@ -24,7 +24,7 @@ class WhmcsCommissionEntry
             ->setAffiliateAccountId($row['affaccid'])
             ->setDescription($row['description'])
             ->setAmount((float)$row['amount'])
-            ->setInvoiceId($row['invoice_id'] === 0 ? null : $row['invoice_id']);
+            ->setInvoiceId((int)$row['invoice_id'] === 0 ? null : (int)$row['invoice_id']);
     }
 
     public function matchesTransaction(WhmcsTransaction $txn): bool {
